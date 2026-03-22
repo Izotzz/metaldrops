@@ -9,29 +9,39 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow">
         <Hero />
+        
+        <div className="container mx-auto px-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-20"></div>
+        </div>
+        
         <ProductGrid />
         
-        {/* Newsletter/Promo Section */}
-        <section className="py-20 bg-indigo-600 text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Join the Lumina Community</h2>
-            <p className="text-indigo-100 mb-10 max-w-xl mx-auto">
-              Get 15% off your first order when you sign up for our newsletter. 
-              Stay updated with the latest trends and exclusive offers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="px-6 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 flex-grow"
-              />
-              <button className="px-8 py-3 rounded-full bg-orange-500 hover:bg-orange-600 font-bold transition-colors">
-                Subscribe
-              </button>
+        {/* CTA Section */}
+        <section className="py-32 relative overflow-hidden">
+          <div className="absolute inset-0 bg-sky-500/5 blur-3xl rounded-full -translate-y-1/2"></div>
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-4xl mx-auto rounded-[2.5rem] border border-white/10 bg-white/5 p-12 md:p-20 text-center backdrop-blur-sm">
+              <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter">
+                READY TO <span className="text-sky-500">DROP?</span>
+              </h2>
+              <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg">
+                Join the most exclusive marketplace for digital assets. 
+                Get early access to limited drops and premium tools.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                <input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="px-6 py-4 rounded-2xl bg-black/40 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-sky-500 flex-grow"
+                />
+                <button className="px-10 py-4 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-black transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                  JOIN NOW
+                </button>
+              </div>
             </div>
           </div>
         </section>

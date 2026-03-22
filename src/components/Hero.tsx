@@ -2,39 +2,52 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Globe, MessageSquare } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden bg-indigo-50 py-20 lg:py-32">
+    <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-32 overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-2xl">
-          <span className="inline-block rounded-full bg-indigo-100 px-4 py-1.5 text-sm font-semibold text-indigo-600 mb-6">
-            New Season Collection 2024
-          </span>
-          <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight">
-            Elevate Your <span className="text-indigo-600">Everyday</span> Style
-          </h1>
-          <p className="text-lg text-gray-600 mb-10 max-w-lg">
-            Discover our curated selection of premium essentials designed for comfort, 
-            durability, and timeless aesthetics.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-full">
-              Shop Now <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline" className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-full px-8">
-              View Lookbook
-            </Button>
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h1 className="text-7xl lg:text-9xl font-black tracking-tighter leading-[0.85] mb-4">
+              <span className="text-sky-500 block">METAL</span>
+              <span className="text-white block">DROPS</span>
+            </h1>
+            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-white/90 mb-8">
+              MARKETPLACE
+            </h2>
+            
+            <p className="text-sm font-bold tracking-[0.2em] text-sky-500/80 uppercase mb-10">
+              Premium Digital Assets & Tools
+            </p>
+            
+            <div className="flex flex-wrap gap-4">
+              <Button size="lg" className="bg-sky-500 hover:bg-sky-400 text-white font-bold px-8 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                Explore Drops <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              
+              <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl px-8">
+                <Globe className="mr-2 h-4 w-4" /> Web Tools
+              </Button>
+              
+              <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl px-8">
+                <MessageSquare className="mr-2 h-4 w-4" /> Discord
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 hidden lg:block w-1/3 h-full">
-        <div className="relative h-full w-full">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-indigo-300 rounded-full blur-3xl opacity-20"></div>
+          
+          <div className="relative hidden lg:block">
+            <div className="relative z-10 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-sm p-2 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
+              <img 
+                src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=1200&auto=format&fit=crop" 
+                alt="Marketplace Preview" 
+                className="rounded-2xl w-full h-auto opacity-80"
+              />
+              <div className="absolute -top-6 -left-6 w-24 h-24 bg-sky-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl"></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
