@@ -101,7 +101,7 @@ const DailyAccount = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col items-center gap-20"
+                  className="flex flex-col items-center gap-12"
                 >
                   <div className="flex items-center justify-center gap-3 text-gray-500 font-black uppercase tracking-widest text-[10px]">
                     <Lock className="w-4 h-4 text-red-600" /> Authentication Required
