@@ -3,7 +3,6 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
-import ProductGrid from '@/components/ProductGrid';
 import Footer from '@/components/Footer';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
@@ -17,8 +16,6 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-20"></div>
         </div>
-        
-        <ProductGrid />
         
         {/* CTA Section */}
         <section className="py-32 relative overflow-hidden">

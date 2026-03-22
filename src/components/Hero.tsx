@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Globe, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -23,9 +24,11 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-sky-500 hover:bg-sky-400 text-white font-bold px-8 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                Explore Drops <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <Link to="/products">
+                <Button size="lg" className="bg-sky-500 hover:bg-sky-400 text-white font-bold px-8 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                  Explore products <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
               
               <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl px-8">
                 <Globe className="mr-2 h-4 w-4" /> Web Tools
