@@ -4,6 +4,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
+import DailyAccount from '@/components/DailyAccount';
 import { Shield, Zap, Users, Trophy } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { TOOLS } from '@/data/tools';
@@ -40,6 +41,9 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Daily Account Section */}
+        <DailyAccount />
 
         {/* Features Section */}
         <section className="py-32">

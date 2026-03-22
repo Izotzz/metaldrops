@@ -7,6 +7,7 @@ interface User {
   email: string;
   password?: string;
   boughtProductIds?: number[];
+  lastClaimedAt?: number; // Timestamp of last claim
 }
 
 interface AuthContextType {
@@ -14,10 +15,12 @@ interface AuthContextType {
   username: string | null;
   userCount: number;
   boughtProductIds: number[];
+  lastClaimedAt: number | null;
   login: (email: string, password: string) => { success: boolean; message: string };
   register: (user: User) => { success: boolean; message: string };
   logout: () => void;
   addBoughtProducts: (ids: number[]) => void;
+  claimDailyAccount: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [username, setUsername] = useState<string | null>(null);
   const [userCount, setUserCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
+  const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
   const getUsers = (): User[] => {
     const users = localStorage.getItem('metal_drops_users');
@@ -48,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentUser = users.find(u => u.username === sessionData.username);
       if (currentUser) {
         setBoughtProductIds(currentUser.boughtProductIds || []);
+        setLastClaimedAt(currentUser.lastClaimedAt || null);
       }
     }
     
@@ -63,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoggedIn(true);
       setUsername(user.username);
       setBoughtProductIds(user.boughtProductIds || []);
+      setLastClaimedAt(user.lastClaimedAt || null);
       localStorage.setItem('metal_drops_session', JSON.stringify({ username: user.username }));
       return { success: true, message: "Login successful" };
     }
@@ -78,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: "Username already taken" };
     }
 
-    const userToSave = { ...newUser, boughtProductIds: [] };
+    const userToSave = { ...newUser, boughtProductIds: [], lastClaimedAt: undefined };
     const updatedUsers = [...users, userToSave];
     updateUsers(updatedUsers);
     setUserCount(updatedUsers.length);
@@ -86,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoggedIn(true);
     setUsername(newUser.username);
     setBoughtProductIds([]);
+    setLastClaimedAt(null);
     localStorage.setItem('metal_drops_session', JSON.stringify({ username: newUser.username }));
     
     return { success: true, message: "Registration successful" };
@@ -108,15 +115,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUsers(updatedUsers);
   };
 
+  const claimDailyAccount = () => {
+    if (!username) return;
+    
+    const now = Date.now();
+    const users = getUsers();
+    const updatedUsers = users.map(u => {
+      if (u.username === username) {
+        setLastClaimedAt(now);
+        return { ...u, lastClaimedAt: now };
+      }
+      return u;
+    });
+    
+    updateUsers(updatedUsers);
+  };
+
   const logout = () => {
     setIsLoggedIn(false);
     setUsername(null);
     setBoughtProductIds([]);
+    setLastClaimedAt(null);
     localStorage.removeItem('metal_drops_session');
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, userCount, boughtProductIds, login, register, logout, addBoughtProducts }}>
+    <AuthContext.Provider value={{ 
+      isLoggedIn, 
+      username, 
+      userCount, 
+      boughtProductIds, 
+      lastClaimedAt,
+      login, 
+      register, 
+      logout, 
+      addBoughtProducts,
+      claimDailyAccount
+    }}>
       {children}
     </AuthContext.Provider>
   );
