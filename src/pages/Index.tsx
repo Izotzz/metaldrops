@@ -7,19 +7,23 @@ import Footer from '@/components/Footer';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Shield, Zap, Users, Trophy } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
-
-const STATS = [
-  { label: "Active Users", value: "12.4K+", icon: Users },
-  { label: "Tools Available", value: "85+", icon: Zap },
-  { label: "Success Rate", value: "99.9%", icon: Shield },
-  { label: "Awards Won", value: "12", icon: Trophy },
-];
+import { useAuth } from '@/context/AuthContext';
+import { TOOLS } from '@/data/tools';
 
 const Index = () => {
+  const { userCount } = useAuth();
+  
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     showSuccess("Welcome to the inner circle!");
   };
+
+  const STATS = [
+    { label: "Members", value: `${userCount}`, icon: Users },
+    { label: "Tools Available", value: `${TOOLS.length}`, icon: Zap },
+    { label: "Success Rate", value: "99.9%", icon: Shield },
+    { label: "Awards Won", value: "12", icon: Trophy },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-black">

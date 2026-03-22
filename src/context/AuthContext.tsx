@@ -11,6 +11,7 @@ interface User {
 interface AuthContextType {
   isLoggedIn: boolean;
   username: string | null;
+  userCount: number;
   login: (email: string, password: string) => { success: boolean; message: string };
   register: (user: User) => { success: boolean; message: string };
   logout: () => void;
@@ -21,8 +22,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [userCount, setUserCount] = useState(0);
 
-  // Initialize from localStorage (simulating cookies/persistent session)
+  const getUsers = (): User[] => {
+    const users = localStorage.getItem('metal_drops_users');
+    return users ? JSON.parse(users) : [];
+  };
+
+  // Initialize from localStorage
   useEffect(() => {
     const session = localStorage.getItem('metal_drops_session');
     if (session) {
@@ -30,12 +37,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoggedIn(true);
       setUsername(sessionData.username);
     }
+    
+    const users = getUsers();
+    setUserCount(users.length);
   }, []);
-
-  const getUsers = (): User[] => {
-    const users = localStorage.getItem('metal_drops_users');
-    return users ? JSON.parse(users) : [];
-  };
 
   const login = (email: string, password: string) => {
     const users = getUsers();
@@ -61,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUsers = [...users, newUser];
     localStorage.setItem('metal_drops_users', JSON.stringify(updatedUsers));
+    setUserCount(updatedUsers.length);
     
     // Auto-login after registration
     setIsLoggedIn(true);
@@ -77,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, login, register, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, username, userCount, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
