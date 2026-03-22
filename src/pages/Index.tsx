@@ -48,10 +48,10 @@ const Index = () => {
         <section className="py-32">
           <div className="container mx-auto px-4">
             <div className="text-center mb-20">
-              <h2 className="text-5xl font-black text-white tracking-tighter uppercase mb-4">
-                Why Choose <span className="text-red-600">Hoku?</span>
+              <h2 className="text-5xl font-black text-white tracking-tighter uppercase mb-4 italic">
+                Why Choose <span className="text-red-600">Metal Drops?</span>
               </h2>
-              <p className="text-gray-500 max-w-2xl mx-auto font-medium">
+              <p className="text-gray-500 max-w-2xl mx-auto font-black uppercase tracking-widest text-[10px]">
                 We provide the most advanced tools and a thriving community for digital enthusiasts.
               </p>
             </div>
@@ -66,8 +66,8 @@ const Index = () => {
                   <div className="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center text-white font-black mb-6 group-hover:rotate-12 transition-transform">
                     0{i + 1}
                   </div>
-                  <h3 className="text-xl font-black text-white mb-4 uppercase tracking-tight">{feature.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed font-medium">{feature.desc}</p>
+                  <h3 className="text-xl font-black text-white mb-4 uppercase tracking-tight italic">{feature.title}</h3>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">{feature.desc}</p>
                 </div>
               ))}
             </div>
@@ -79,10 +79,10 @@ const Index = () => {
           <div className="absolute inset-0 bg-red-600/5 blur-3xl rounded-full -translate-y-1/2"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto rounded-[3rem] border border-white/10 bg-[#0a0a0a] p-12 md:p-24 text-center backdrop-blur-sm shadow-2xl">
-              <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter uppercase">
+              <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter uppercase italic">
                 READY TO <span className="text-red-600">DROP?</span>
               </h2>
-              <p className="text-gray-400 mb-12 max-w-xl mx-auto text-lg font-medium">
+              <p className="text-gray-400 mb-12 max-w-xl mx-auto text-[10px] font-black uppercase tracking-[0.3em]">
                 Join the most exclusive marketplace for digital assets. 
                 Get early access to limited drops and premium tools.
               </p>
@@ -91,9 +91,9 @@ const Index = () => {
                   type="email" 
                   required
                   placeholder="Enter your email" 
-                  className="px-6 py-4 rounded-2xl bg-black border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-red-600 flex-grow font-bold"
+                  className="px-6 py-4 rounded-2xl bg-black border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-red-600 flex-grow font-black uppercase tracking-widest text-[10px]"
                 />
-                <button type="submit" className="px-10 py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest">
+                <button type="submit" className="px-10 py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-[10px]">
                   JOIN NOW
                 </button>
               </form>

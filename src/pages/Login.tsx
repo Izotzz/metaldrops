@@ -1,13 +1,33 @@
 "use client";
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { showSuccess, showError } from '@/utils/toast';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      showError("Please fill in all fields");
+      return;
+    }
+    // Simulate login
+    const username = email.split('@')[0];
+    login(username);
+    showSuccess(`Welcome back, ${username}!`);
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-black">
       <div className="absolute inset-0 bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2"></div>
@@ -19,17 +39,19 @@ const Login = () => {
         
         <div className="bg-[#050505] border border-white/5 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl">
           <div className="text-center mb-10">
-            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">H</div>
+            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">WELCOME BACK</h1>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">Enter your credentials to access</p>
           </div>
           
-          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="space-y-3">
               <Label htmlFor="email" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Email Address</Label>
               <Input 
                 id="email" 
                 type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com" 
                 className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
               />
@@ -38,17 +60,19 @@ const Login = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Password</Label>
-                <a href="#" className="text-[10px] text-red-600 font-black uppercase tracking-widest hover:underline">Forgot?</a>
+                <button type="button" className="text-[10px] text-red-600 font-black uppercase tracking-widest hover:underline">Forgot?</button>
               </div>
               <Input 
                 id="password" 
                 type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••" 
                 className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
               />
             </div>
             
-            <Button className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+            <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
               SIGN IN <LogIn className="ml-3 h-4 w-4" />
             </Button>
           </form>
