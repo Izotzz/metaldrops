@@ -5,14 +5,27 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2, CreditCard } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { showSuccess } from '@/utils/toast';
+import { useAuth } from '@/context/AuthContext';
+import { showSuccess, showError } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 const CartSheet = () => {
   const { items, removeFromCart, clearCart, total } = useCart();
+  const { isLoggedIn, addBoughtProducts } = useAuth();
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
-    showSuccess("Redirecting to secure checkout...");
+    if (!isLoggedIn) {
+      showError("Please login to complete your purchase");
+      navigate('/login');
+      return;
+    }
+    
+    const productIds = items.map(item => item.id);
+    addBoughtProducts(productIds);
+    showSuccess("Purchase successful! Products added to your library.");
     clearCart();
+    navigate('/my-products');
   };
 
   return (

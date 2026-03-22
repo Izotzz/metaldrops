@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn, Package } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
@@ -68,6 +68,25 @@ const Navbar = () => {
               {item.name}
             </Link>
           ))}
+          {isLoggedIn && (
+            <Link
+              to="/my-products"
+              className={cn(
+                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative",
+                location.pathname === "/my-products" 
+                  ? "text-red-500" 
+                  : "text-gray-400 hover:text-white"
+              )}
+            >
+              {location.pathname === "/my-products" && (
+                <motion.div 
+                  layoutId="nav-active"
+                  className="absolute inset-0 bg-red-600/10 rounded-xl -z-10"
+                />
+              )}
+              My Library
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
