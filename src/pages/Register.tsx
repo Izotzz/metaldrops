@@ -5,27 +5,37 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, ArrowLeft } from 'lucide-react';
+import { UserPlus, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (!username || !email || !password) {
-      showError("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
-    // Simulate registration
-    login(username);
-    showSuccess(`Account created! Welcome, ${username}!`);
-    navigate('/');
+
+    const result = register({ username, email, password });
+    
+    if (result.success) {
+      showSuccess(`Account created! Welcome, ${username}!`);
+      navigate('/');
+    } else {
+      setError(result.message);
+      showError(result.message);
+    }
   };
 
   return (
@@ -37,7 +47,11 @@ const Register = () => {
           <ArrowLeft className="h-4 w-4 text-red-600" /> Back to home
         </Link>
         
-        <div className="bg-[#050505] border border-white/5 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#050505] border border-white/5 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl"
+        >
           <div className="text-center mb-10">
             <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">JOIN THE DROPS</h1>
@@ -45,6 +59,20 @@ const Register = () => {
           </div>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="space-y-3">
               <Label htmlFor="username" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Username</Label>
               <Input 
@@ -94,7 +122,7 @@ const Register = () => {
             <span className="text-gray-500">Already have an account? </span>
             <Link to="/login" className="text-red-600 hover:underline">Sign in</Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
