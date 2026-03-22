@@ -4,6 +4,7 @@ import React from 'react';
 import { Mail, Folder, Cookie, CreditCard, Sparkles, Download, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { showSuccess, showLoading, dismissToast } from '@/utils/toast';
+import { motion } from 'framer-motion';
 
 interface ProductProps {
   id: number;
@@ -32,7 +33,12 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
   };
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -10 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleAccess}
       className={cn(
         "group relative flex flex-col p-10 rounded-[2.5rem] bg-[#050505] border transition-all duration-500 cursor-pointer overflow-hidden",
@@ -45,9 +51,12 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
       <div className="absolute -inset-px bg-gradient-to-br from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
       <div className="flex items-start justify-between mb-10 relative z-10">
-        <div className="w-16 h-16 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20 group-hover:scale-110 transition-transform duration-500">
+        <motion.div 
+          whileHover={{ rotate: 12, scale: 1.1 }}
+          className="w-16 h-16 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20 group-hover:scale-110 transition-transform duration-500"
+        >
           <Icon className="w-8 h-8 text-red-600" />
-        </div>
+        </motion.div>
         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
           <Download className="w-3 h-3 text-red-600" />
           {downloads}
@@ -71,7 +80,7 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
           ACCESS TOOL <ChevronRight className="w-4 h-4 text-red-600" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

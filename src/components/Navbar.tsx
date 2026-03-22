@@ -6,6 +6,7 @@ import { Bell, User, LogOut, Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
+import { motion } from 'framer-motion';
 
 const Navbar = () => {
   const location = useLocation();
@@ -17,11 +18,21 @@ const Navbar = () => {
   ];
 
   return (
-    <div className="fixed top-6 left-0 right-0 z-50 px-4">
+    <motion.div 
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-6 left-0 right-0 z-50 px-4"
+    >
       <nav className="container mx-auto max-w-6xl h-16 flex items-center justify-between px-6 rounded-2xl border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)] group-hover:scale-110 transition-transform">H</div>
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: -5 }}
+              className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+            >
+              H
+            </motion.div>
             <span className="text-xl font-black tracking-tighter text-white hidden lg:block uppercase italic">hoku tools</span>
           </Link>
         </div>
@@ -32,12 +43,18 @@ const Navbar = () => {
               key={item.name}
               to={item.path}
               className={cn(
-                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative",
                 location.pathname === item.path 
-                  ? "bg-red-600/10 text-red-500" 
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                  ? "text-red-500" 
+                  : "text-gray-400 hover:text-white"
               )}
             >
+              {location.pathname === item.path && (
+                <motion.div 
+                  layoutId="nav-active"
+                  className="absolute inset-0 bg-red-600/10 rounded-xl -z-10"
+                />
+              )}
               {item.name}
             </Link>
           ))}
@@ -81,7 +98,7 @@ const Navbar = () => {
           </Button>
         </div>
       </nav>
-    </div>
+    </motion.div>
   );
 };
 

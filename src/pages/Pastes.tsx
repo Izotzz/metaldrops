@@ -7,6 +7,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus, ChevronRight, Clock, Eye, MessageSquare } from 'lucide-react';
 import { showSuccess, showLoading, dismissToast } from '@/utils/toast';
+import { motion } from 'framer-motion';
 
 const PASTES = [
   { id: 1, title: "10x Netflix 4K HDR Accounts", author: "metalicdivision", time: "1 hour ago", views: "1.2k", comments: 12, color: "text-red-600" },
@@ -29,7 +30,12 @@ const Pastes = () => {
       <Navbar />
       <main className="flex-grow pt-48 pb-24">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20"
+          >
             <div>
               <h1 className="text-7xl font-black text-white tracking-tighter uppercase italic">
                 Community <span className="text-red-600">Pastes</span>
@@ -42,18 +48,27 @@ const Pastes = () => {
             >
               <Plus className="mr-3 h-5 w-5" /> Create Paste
             </Button>
-          </div>
+          </motion.div>
 
-          <div className="flex gap-10 border-b border-white/5 mb-12">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex gap-10 border-b border-white/5 mb-12"
+          >
             <button className="pb-5 text-red-600 font-black border-b-2 border-red-600 uppercase tracking-widest text-[10px]">Recent</button>
             <button className="pb-5 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-[10px]">Most Viewed</button>
             <button className="pb-5 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-[10px]">My Pastes</button>
-          </div>
+          </motion.div>
 
           <div className="space-y-5">
-            {PASTES.map((paste) => (
-              <div 
+            {PASTES.map((paste, index) => (
+              <motion.div 
                 key={paste.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                whileHover={{ x: 10 }}
                 onClick={() => handleViewPaste(paste.title)}
                 className="group flex flex-col md:flex-row md:items-center justify-between p-10 rounded-[2.5rem] bg-[#050505] border border-white/5 hover:border-red-600/40 hover:bg-[#080808] transition-all cursor-pointer"
               >
@@ -76,7 +91,7 @@ const Pastes = () => {
                 <div className="mt-8 md:mt-0 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 group-hover:text-red-600 transition-all group-hover:translate-x-3">
                   VIEW PASTE <ChevronRight className="h-5 w-5 text-red-600" />
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
