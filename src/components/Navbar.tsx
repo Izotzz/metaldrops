@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn, Package } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
@@ -18,6 +18,7 @@ const Navbar = () => {
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Tools', path: '/products' },
+    { name: 'Daily', path: '/daily' },
     { name: 'Pastes', path: '/pastes' },
   ];
 
