@@ -19,7 +19,6 @@ export const TOOLS = [
     description: "Extract URL:Login:Pass combos from logs.",
     downloads: 0,
     iconType: 'folder' as const,
-    isHighlighted: true,
   },
   {
     id: 4,

@@ -4,7 +4,6 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Shield, Zap, Users, Trophy } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useAuth } from '@/context/AuthContext';
@@ -106,7 +105,6 @@ const Index = () => {
         </section>
       </main>
       <Footer />
-      <MadeWithDyad />
     </div>
   );
 };

@@ -4,7 +4,6 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProductGrid from '@/components/ProductGrid';
 import Footer from '@/components/Footer';
-import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Products = () => {
   return (
@@ -20,7 +19,6 @@ const Products = () => {
         <ProductGrid />
       </main>
       <Footer />
-      <MadeWithDyad />
     </div>
   );
 };

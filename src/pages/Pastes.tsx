@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus, ChevronRight, Clock, Eye, MessageSquare, LogIn, X } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
@@ -190,7 +189,6 @@ const Pastes = () => {
       </AnimatePresence>
 
       <Footer />
-      <MadeWithDyad />
     </div>
   );
 };

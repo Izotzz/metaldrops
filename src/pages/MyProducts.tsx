@@ -3,7 +3,6 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { TOOLS } from '@/data/tools';
 import { useAuth } from '@/context/AuthContext';
 import { Download, Package, ArrowRight } from 'lucide-react';
@@ -74,7 +73,6 @@ const MyProducts = () => {
         </div>
       </main>
       <Footer />
-      <MadeWithDyad />
     </div>
   );
 };
