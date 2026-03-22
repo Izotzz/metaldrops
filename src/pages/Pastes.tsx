@@ -22,15 +22,15 @@ const Pastes = () => {
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-center justify-between mb-12">
             <h1 className="text-4xl font-black text-white tracking-tighter">
-              Community <span className="text-sky-500">Pastes</span>
+              Community <span className="text-red-600">Pastes</span>
             </h1>
-            <Button className="bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl gap-2">
+            <Button className="bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl gap-2">
               <Plus className="h-4 w-4" /> Post
             </Button>
           </div>
 
           <div className="flex gap-8 border-b border-white/10 mb-8">
-            <button className="pb-4 text-sky-500 font-bold border-b-2 border-sky-500">Recent</button>
+            <button className="pb-4 text-red-600 font-bold border-b-2 border-red-600">Recent</button>
             <button className="pb-4 text-gray-500 font-bold hover:text-white transition-colors">Most Viewed</button>
           </div>
 
@@ -38,11 +38,11 @@ const Pastes = () => {
             {PASTES.map((paste) => (
               <div 
                 key={paste.id}
-                className="group flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-500/50 transition-all cursor-pointer"
+                className="group flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-red-600/50 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-sky-500" />
+                  <div className="w-12 h-12 rounded-full bg-red-600/10 flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
                     <h3 className={`text-xl font-bold uppercase tracking-tight ${paste.color}`}>{paste.title}</h3>
@@ -52,7 +52,7 @@ const Pastes = () => {
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-sky-400 transition-colors" />
+                <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-red-600 transition-colors" />
               </div>
             ))}
           </div>

@@ -12,20 +12,20 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-7xl lg:text-9xl font-black tracking-tighter leading-[0.85] mb-4">
-              <span className="text-sky-500 block">METAL</span>
+              <span className="text-red-600 block">METAL</span>
               <span className="text-white block">DROPS</span>
             </h1>
             <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-white/90 mb-8">
               MARKETPLACE
             </h2>
             
-            <p className="text-sm font-bold tracking-[0.2em] text-sky-500/80 uppercase mb-10">
+            <p className="text-sm font-bold tracking-[0.2em] text-red-500/80 uppercase mb-10">
               Premium Digital Assets & Tools
             </p>
             
             <div className="flex flex-wrap gap-4">
               <Link to="/products">
-                <Button size="lg" className="bg-sky-500 hover:bg-sky-400 text-white font-bold px-8 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                <Button size="lg" className="bg-red-600 hover:bg-red-500 text-white font-bold px-8 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.3)]">
                   Explore products <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -47,8 +47,8 @@ const Hero = () => {
                 alt="Marketplace Preview" 
                 className="rounded-2xl w-full h-auto opacity-80"
               />
-              <div className="absolute -top-6 -left-6 w-24 h-24 bg-sky-500/20 rounded-full blur-3xl"></div>
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl"></div>
+              <div className="absolute -top-6 -left-6 w-24 h-24 bg-red-600/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl"></div>
             </div>
           </div>
         </div>
