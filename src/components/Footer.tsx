@@ -1,74 +1,87 @@
 "use client";
 
 import React from 'react';
-import { Facebook, Twitter, Instagram, Youtube, Mail } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
+import { Github, Twitter, MessageSquare, Mail, ExternalLink } from 'lucide-react';
+import { showSuccess } from '@/utils/toast';
 
 const Footer = () => {
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    showSuccess("Successfully subscribed to the newsletter!");
+  };
+
   return (
-    <footer className="bg-gray-900 text-gray-300 pt-16 pb-8">
+    <footer className="bg-[#050505] border-t border-white/5 pt-20 pb-10">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          <div>
-            <a href="/" className="text-2xl font-bold tracking-tight text-white mb-6 block">
-              LUMINA<span className="text-orange-500">.</span>
-            </a>
-            <p className="text-sm leading-relaxed mb-6">
-              Premium quality goods for the modern lifestyle. We believe in sustainable 
-              craftsmanship and timeless design.
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          <div className="space-y-6">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_15px_rgba(220,38,38,0.3)]">H</div>
+              <span className="text-xl font-bold tracking-tighter text-white">hoku tools</span>
+            </Link>
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
+              The ultimate destination for premium digital assets, tools, and community-driven pastes. Built for the elite.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-white transition-colors"><Facebook size={20} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Twitter size={20} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Instagram size={20} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Youtube size={20} /></a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
+                <Twitter size={18} />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
+                <MessageSquare size={18} />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
+                <Github size={18} />
+              </a>
             </div>
           </div>
-          
+
           <div>
-            <h4 className="text-white font-bold mb-6">Quick Links</h4>
-            <ul className="space-y-4 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Shipping Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Returns & Exchanges</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">FAQs</a></li>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Navigation</h4>
+            <ul className="space-y-4">
+              <li><Link to="/" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Home</Link></li>
+              <li><Link to="/products" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Tools & Products</Link></li>
+              <li><Link to="/pastes" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Community Pastes</Link></li>
+              <li><Link to="/login" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Account Login</Link></li>
             </ul>
           </div>
-          
+
           <div>
-            <h4 className="text-white font-bold mb-6">Categories</h4>
-            <ul className="space-y-4 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Men's Fashion</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Women's Fashion</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Home & Living</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Electronics</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Accessories</a></li>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Support</h4>
+            <ul className="space-y-4">
+              <li><a href="#" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Documentation</a></li>
+              <li><a href="#" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Discord Server</a></li>
+              <li><a href="#" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="text-gray-500 hover:text-red-500 text-sm transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
-          
+
           <div>
-            <h4 className="text-white font-bold mb-6">Newsletter</h4>
-            <p className="text-sm mb-4">Subscribe to get special offers and first look at new arrivals.</p>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Your email" 
-                className="bg-gray-800 border-gray-700 text-white focus-visible:ring-indigo-500"
+            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Newsletter</h4>
+            <p className="text-gray-500 text-sm mb-4">Get notified about new drops and updates.</p>
+            <form onSubmit={handleSubscribe} className="relative">
+              <input 
+                type="email" 
+                placeholder="Email address" 
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
               />
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
-                <Mail size={18} />
-              </Button>
-            </div>
+              <button type="submit" className="absolute right-2 top-2 p-1.5 bg-red-600 rounded-lg text-white hover:bg-red-500 transition-colors">
+                <Mail size={16} />
+              </button>
+            </form>
           </div>
         </div>
-        
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <p>© 2024 LUMINA Shop. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
+
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-gray-600 text-xs font-medium">
+            © 2024 HOKU TOOLS. ALL RIGHTS RESERVED.
+          </p>
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5 text-[10px] font-black text-red-500/50 uppercase tracking-widest">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+              System Status: Operational
+            </span>
           </div>
         </div>
       </div>
