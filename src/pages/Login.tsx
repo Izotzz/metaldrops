@@ -9,53 +9,53 @@ import { LogIn, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="absolute inset-0 bg-sky-500/5 blur-3xl rounded-full -translate-y-1/2"></div>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-black">
+      <div className="absolute inset-0 bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2"></div>
       
       <div className="w-full max-w-md relative z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to home
+        <Link to="/" className="inline-flex items-center gap-3 text-gray-500 hover:text-white mb-10 transition-colors font-black uppercase tracking-widest text-[10px]">
+          <ArrowLeft className="h-4 w-4 text-red-600" /> Back to home
         </Link>
         
-        <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center font-black text-white italic text-xl mx-auto mb-4">M</div>
-            <h1 className="text-3xl font-black text-white tracking-tighter">WELCOME BACK</h1>
-            <p className="text-gray-400 text-sm mt-2">Enter your credentials to access your account</p>
+        <div className="bg-[#050505] border border-white/5 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">H</div>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">WELCOME BACK</h1>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">Enter your credentials to access</p>
           </div>
           
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300 font-bold text-xs uppercase tracking-widest">Email Address</Label>
+          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Email Address</Label>
               <Input 
                 id="email" 
                 type="email" 
                 placeholder="name@example.com" 
-                className="bg-black/40 border-white/10 text-white h-12 rounded-xl focus:ring-sky-500"
+                className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-300 font-bold text-xs uppercase tracking-widest">Password</Label>
-                <a href="#" className="text-xs text-sky-500 hover:underline">Forgot password?</a>
+                <Label htmlFor="password" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Password</Label>
+                <a href="#" className="text-[10px] text-red-600 font-black uppercase tracking-widest hover:underline">Forgot?</a>
               </div>
               <Input 
                 id="password" 
                 type="password" 
                 placeholder="••••••••" 
-                className="bg-black/40 border-white/10 text-white h-12 rounded-xl focus:ring-sky-500"
+                className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
               />
             </div>
             
-            <Button className="w-full bg-sky-500 hover:bg-sky-400 text-white font-black h-12 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-              SIGN IN <LogIn className="ml-2 h-4 w-4" />
+            <Button className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+              SIGN IN <LogIn className="ml-3 h-4 w-4" />
             </Button>
           </form>
           
-          <div className="mt-8 text-center text-sm">
+          <div className="mt-10 text-center text-[10px] font-black uppercase tracking-widest">
             <span className="text-gray-500">Don't have an account? </span>
-            <Link to="/register" className="text-sky-500 font-bold hover:underline">Create one</Link>
+            <Link to="/register" className="text-red-600 hover:underline">Create one</Link>
           </div>
         </div>
       </div>

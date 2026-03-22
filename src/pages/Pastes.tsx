@@ -9,17 +9,13 @@ import { FileText, Plus, ChevronRight, Clock, Eye, MessageSquare } from 'lucide-
 import { showSuccess, showLoading, dismissToast } from '@/utils/toast';
 
 const PASTES = [
-  { id: 1, title: "10x Netflix 4K HDR Accounts", author: "metalicdivision", time: "1 hour ago", views: "1.2k", comments: 12, color: "text-red-500" },
-  { id: 2, title: "NETFLIX VALID COOKIE WITH FULL CAP", author: "fury_xd1", time: "16 days ago", views: "850", comments: 5, color: "text-red-400" },
-  { id: 3, title: "NETFLIX VALID COOKIE", author: "fury_xd1", time: "1 month ago", views: "3.4k", comments: 42, color: "text-red-600" },
-  { id: 4, title: "NETFLIX FA ACCOUNT", author: "fury_xd1", time: "1 month ago", views: "2.1k", comments: 18, color: "text-red-700" },
+  { id: 1, title: "10x Netflix 4K HDR Accounts", author: "metalicdivision", time: "1 hour ago", views: "1.2k", comments: 12, color: "text-red-600" },
+  { id: 2, title: "NETFLIX VALID COOKIE WITH FULL CAP", author: "fury_xd1", time: "16 days ago", views: "850", comments: 5, color: "text-red-500" },
+  { id: 3, title: "NETFLIX VALID COOKIE", author: "fury_xd1", time: "1 month ago", views: "3.4k", comments: 42, color: "text-red-700" },
+  { id: 4, title: "NETFLIX FA ACCOUNT", author: "fury_xd1", time: "1 month ago", views: "2.1k", comments: 18, color: "text-red-800" },
 ];
 
 const Pastes = () => {
-  const handlePost = () => {
-    showSuccess("Post editor opened! (Simulation)");
-  };
-
   const handleViewPaste = (title: string) => {
     const toastId = showLoading(`Loading ${title}...`);
     setTimeout(() => {
@@ -31,54 +27,54 @@ const Pastes = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black">
       <Navbar />
-      <main className="flex-grow pt-40 pb-20">
+      <main className="flex-grow pt-48 pb-24">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20">
             <div>
-              <h1 className="text-6xl font-black text-white tracking-tighter uppercase">
+              <h1 className="text-7xl font-black text-white tracking-tighter uppercase italic">
                 Community <span className="text-red-600">Pastes</span>
               </h1>
-              <p className="text-gray-500 font-bold mt-2 uppercase tracking-widest text-xs">Share and discover digital assets</p>
+              <p className="text-gray-500 font-black mt-3 uppercase tracking-[0.3em] text-[10px]">Share and discover digital assets</p>
             </div>
             <Button 
-              onClick={handlePost}
-              className="bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl h-14 px-8 shadow-[0_0_20px_rgba(220,38,38,0.3)] uppercase tracking-widest"
+              onClick={() => showSuccess("Post editor coming soon!")}
+              className="bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl h-16 px-10 shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
             >
-              <Plus className="mr-2 h-5 w-5" /> Create Paste
+              <Plus className="mr-3 h-5 w-5" /> Create Paste
             </Button>
           </div>
 
-          <div className="flex gap-8 border-b border-white/5 mb-10">
-            <button className="pb-4 text-red-600 font-black border-b-2 border-red-600 uppercase tracking-widest text-xs">Recent</button>
-            <button className="pb-4 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-xs">Most Viewed</button>
-            <button className="pb-4 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-xs">My Pastes</button>
+          <div className="flex gap-10 border-b border-white/5 mb-12">
+            <button className="pb-5 text-red-600 font-black border-b-2 border-red-600 uppercase tracking-widest text-[10px]">Recent</button>
+            <button className="pb-5 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-[10px]">Most Viewed</button>
+            <button className="pb-5 text-gray-500 font-black hover:text-white transition-colors uppercase tracking-widest text-[10px]">My Pastes</button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {PASTES.map((paste) => (
               <div 
                 key={paste.id}
                 onClick={() => handleViewPaste(paste.title)}
-                className="group flex flex-col md:flex-row md:items-center justify-between p-8 rounded-[2rem] bg-[#0a0a0a] border border-white/5 hover:border-red-600/40 hover:bg-[#0f0f0f] transition-all cursor-pointer"
+                className="group flex flex-col md:flex-row md:items-center justify-between p-10 rounded-[2.5rem] bg-[#050505] border border-white/5 hover:border-red-600/40 hover:bg-[#080808] transition-all cursor-pointer"
               >
-                <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20 group-hover:scale-110 transition-transform">
-                    <FileText className="h-7 w-7 text-red-600" />
+                <div className="flex items-center gap-8">
+                  <div className="w-16 h-16 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20 group-hover:scale-110 transition-transform">
+                    <FileText className="h-8 w-8 text-red-600" />
                   </div>
                   <div>
-                    <h3 className={`text-xl font-black uppercase tracking-tight mb-2 ${paste.color} group-hover:text-red-500 transition-colors`}>
+                    <h3 className={`text-2xl font-black uppercase tracking-tight mb-3 ${paste.color} group-hover:text-red-600 transition-colors italic`}>
                       {paste.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5">BY <span className="text-white">{paste.author}</span></span>
-                      <span className="flex items-center gap-1.5"><Clock className="h-3 w-3 text-red-500" /> {paste.time}</span>
-                      <span className="flex items-center gap-1.5"><Eye className="h-3 w-3 text-red-500" /> {paste.views}</span>
-                      <span className="flex items-center gap-1.5"><MessageSquare className="h-3 w-3 text-red-500" /> {paste.comments}</span>
+                    <div className="flex flex-wrap items-center gap-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                      <span className="flex items-center gap-2">BY <span className="text-white">{paste.author}</span></span>
+                      <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-red-600" /> {paste.time}</span>
+                      <span className="flex items-center gap-2"><Eye className="h-3.5 w-3.5 text-red-600" /> {paste.views}</span>
+                      <span className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5 text-red-600" /> {paste.comments}</span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-6 md:mt-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-hover:text-red-500 transition-all group-hover:translate-x-2">
-                  VIEW PASTE <ChevronRight className="h-4 w-4 text-red-500" />
+                <div className="mt-8 md:mt-0 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 group-hover:text-red-600 transition-all group-hover:translate-x-3">
+                  VIEW PASTE <ChevronRight className="h-5 w-5 text-red-600" />
                 </div>
               </div>
             ))}
