@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import CartSheet from './CartSheet';
 
 const Navbar = () => {
   const location = useLocation();
@@ -70,6 +71,8 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <CartSheet />
+          
           {isLoggedIn ? (
             <>
               <Button 

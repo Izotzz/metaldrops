@@ -1,10 +1,12 @@
 "use client";
 
 import React from 'react';
-import { Mail, Folder, Cookie, CreditCard, Sparkles, Download, ChevronRight } from 'lucide-react';
+import { Mail, Folder, Cookie, CreditCard, Sparkles, Download, ChevronRight, ShoppingCart } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { showSuccess, showLoading, dismissToast } from '@/utils/toast';
+import { showSuccess } from '@/utils/toast';
 import { motion } from 'framer-motion';
+import { useCart } from '@/context/CartContext';
+import { Button } from './ui/button';
 
 interface ProductProps {
   id: number;
@@ -15,7 +17,9 @@ interface ProductProps {
   isHighlighted?: boolean;
 }
 
-const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: ProductProps) => {
+const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted }: ProductProps) => {
+  const { addToCart } = useCart();
+  
   const Icon = {
     mail: Mail,
     folder: Folder,
@@ -24,12 +28,10 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
     sparkles: Sparkles,
   }[iconType];
 
-  const handleAccess = () => {
-    const toastId = showLoading(`Preparing ${name}...`);
-    setTimeout(() => {
-      dismissToast(toastId);
-      showSuccess(`${name} is ready for download!`);
-    }, 1500);
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart({ id, name, price: 29.99, iconType });
+    showSuccess(`${name} added to cart!`);
   };
 
   return (
@@ -39,9 +41,8 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
       viewport={{ once: true }}
       whileHover={{ y: -10 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      onClick={handleAccess}
       className={cn(
-        "group relative flex flex-col p-10 rounded-[2.5rem] bg-[#050505] border transition-all duration-500 cursor-pointer overflow-hidden",
+        "group relative flex flex-col p-10 rounded-[2.5rem] bg-[#050505] border transition-all duration-500 overflow-hidden",
         isHighlighted 
           ? "border-red-600/40 shadow-[0_0_50px_rgba(220,38,38,0.15)]" 
           : "border-white/5 hover:border-red-600/30 hover:bg-[#080808] hover:shadow-[0_0_40px_rgba(220,38,38,0.1)]"
@@ -75,10 +76,14 @@ const ProductCard = ({ name, description, downloads, iconType, isHighlighted }: 
         </p>
       </div>
 
-      <div className="mt-auto relative z-10">
-        <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-white/30 group-hover:text-red-600 transition-all group-hover:translate-x-2">
-          ACCESS TOOL <ChevronRight className="w-4 h-4 text-red-600" />
-        </div>
+      <div className="mt-auto relative z-10 flex items-center justify-between">
+        <div className="text-xl font-black text-white">$29.99</div>
+        <Button 
+          onClick={handleAddToCart}
+          className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12 px-6 uppercase tracking-widest text-[10px]"
+        >
+          Add to Cart <ShoppingCart className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </motion.div>
   );
