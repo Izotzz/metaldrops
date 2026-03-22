@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Twitter, MessageSquare, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 
 const Footer = () => {
@@ -23,17 +23,6 @@ const Footer = () => {
             <p className="text-gray-500 text-xs font-medium leading-relaxed max-w-xs uppercase tracking-wider">
               The ultimate destination for premium digital assets, tools, and community-driven pastes. Built for the elite.
             </p>
-            <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
-                <Twitter size={18} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
-                <MessageSquare size={18} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5">
-                <Github size={18} />
-              </a>
-            </div>
           </div>
 
           <div>
@@ -49,10 +38,7 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-black mb-6 uppercase tracking-[0.3em] text-[10px]">Support</h4>
             <ul className="space-y-4">
-              <li><button className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Documentation</button></li>
               <li><button className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Discord Server</button></li>
-              <li><button className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Terms of Service</button></li>
-              <li><button className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Privacy Policy</button></li>
             </ul>
           </div>
 
