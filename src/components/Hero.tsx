@@ -29,6 +29,16 @@ const Hero = () => {
 
   return (
     <section className="relative pt-48 pb-24 lg:pt-64 lg:pb-40 overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 -z-20">
+        <img 
+          src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop" 
+          alt="Background" 
+          className="w-full h-full object-cover opacity-20 grayscale"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black"></div>
+      </div>
+
       <motion.div 
         variants={containerVariants}
         initial="hidden"
@@ -77,12 +87,6 @@ const Hero = () => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 2, ease: "easeOut" }}
         className="absolute top-1/2 right-0 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[120px] -z-10"
-      ></motion.div>
-      <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
-        className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-red-600/5 rounded-full blur-[100px] -z-10"
       ></motion.div>
     </section>
   );
