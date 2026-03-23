@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail, ShieldCheck, Refr
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -22,8 +23,8 @@ const ForgotPassword = () => {
   const { sendResetCode, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  const handleSendCode = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSendCode = (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
 
     if (!email) {
@@ -37,7 +38,6 @@ const ForgotPassword = () => {
       setGeneratedCode(result.code || '');
       setStep(2);
       showSuccess("Verification code generated!");
-      console.log("SIMULATED EMAIL SENT TO:", email, "CODE:", result.code);
     } else {
       setError(result.message);
       showError(result.message);

@@ -105,17 +105,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const users = getUsers();
     const user = users.find(u => u.email === email);
     
-    if (!user) {
-      return { success: false, message: "Email not found" };
-    }
-
-    // Generate a random 6-digit code
+    // For security, we check if user exists, but for testing we'll allow it
+    // In a real app, you might return success even if user doesn't exist to prevent email enumeration
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setActiveResetCodes(prev => ({ ...prev, [email]: code }));
     
-    // In a real app, this would be sent via an email API
     console.log(`Reset code for ${email}: ${code}`);
     
+    if (!user) {
+      return { success: false, message: "Email not found in our records" };
+    }
+
     return { success: true, message: "Reset code sent to your email", code };
   };
 
@@ -130,7 +130,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     users[userIndex].password = newPassword;
     updateUsers(users);
     
-    // Clear the used code
     setActiveResetCodes(prev => {
       const next = { ...prev };
       delete next[email];
