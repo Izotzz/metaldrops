@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from './ui/button';
 
@@ -10,16 +10,29 @@ const AuthBanner = () => {
   const { isLoggedIn } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
 
+  useEffect(() => {
+    // Verificar si el usuario ya lo cerró en esta sesión
+    const dismissed = sessionStorage.getItem('auth-banner-dismissed');
+    if (dismissed) setIsVisible(false);
+  }, []);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    sessionStorage.setItem('auth-banner-dismissed', 'true');
+    // Notificar a otros componentes que el banner se ha cerrado
+    window.dispatchEvent(new CustomEvent('auth-banner-closed'));
+  };
+
   if (isLoggedIn || !isVisible) return null;
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: 'auto', opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-red-600/10 border-b border-red-600/20 relative z-[60] overflow-hidden"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -100, opacity: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 bg-red-600/10 border-b border-red-600/20 z-[70] backdrop-blur-md"
       >
         <div className="container mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -33,7 +46,7 @@ const AuthBanner = () => {
           
           <Button 
             variant="ghost" 
-            onClick={() => setIsVisible(false)}
+            onClick={handleDismiss}
             className="h-9 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-black uppercase tracking-widest text-[9px] transition-all"
           >
             Understood

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User, LogOut, Menu, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,19 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoggedIn, username, logout } = useAuth();
+  const [bannerActive, setBannerActive] = useState(false);
   
+  useEffect(() => {
+    const checkBanner = () => {
+      const dismissed = sessionStorage.getItem('auth-banner-dismissed');
+      setBannerActive(!isLoggedIn && !dismissed);
+    };
+
+    checkBanner();
+    window.addEventListener('auth-banner-closed', () => setBannerActive(false));
+    return () => window.removeEventListener('auth-banner-closed', () => setBannerActive(false));
+  }, [isLoggedIn]);
+
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Tools', path: '/products' },
@@ -31,9 +43,13 @@ const Navbar = () => {
   return (
     <motion.div 
       initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={{ 
+        y: 0, 
+        opacity: 1,
+        top: bannerActive ? '80px' : '24px' 
+      }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-6 left-0 right-0 z-50 px-4"
+      className="fixed left-0 right-0 z-50 px-4 transition-[top] duration-500"
     >
       <nav className="container mx-auto max-w-6xl h-16 flex items-center justify-between px-6 rounded-2xl border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
         <div className="flex items-center gap-8">
