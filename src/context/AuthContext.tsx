@@ -1,14 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  username: string;
-  email: string;
-  password?: string;
-  boughtProductIds?: number[];
-  lastClaimedAt?: number;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -16,173 +10,159 @@ interface AuthContextType {
   userCount: number;
   boughtProductIds: number[];
   lastClaimedAt: number | null;
-  login: (email: string, password: string) => { success: boolean; message: string };
-  register: (user: User) => { success: boolean; message: string };
-  logout: () => void;
-  addBoughtProducts: (ids: number[]) => void;
-  claimDailyAccount: () => void;
-  sendResetCode: (email: string) => { success: boolean; message: string; code?: string };
-  resetPassword: (email: string, newPassword: string) => { success: boolean; message: string };
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (data: { username: string; email: string; password: string }) => Promise<{ success: boolean; message: string }>;
+  logout: () => Promise<void>;
+  addBoughtProducts: (ids: number[]) => Promise<void>;
+  claimDailyAccount: () => Promise<void>;
+  sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (password: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [userCount, setUserCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
-  const [activeResetCodes, setActiveResetCodes] = useState<Record<string, string>>({});
-
-  const getUsers = (): User[] => {
-    const users = localStorage.getItem('metal_drops_users');
-    return users ? JSON.parse(users) : [];
-  };
-
-  const updateUsers = (users: User[]) => {
-    localStorage.setItem('metal_drops_users', JSON.stringify(users));
-  };
 
   useEffect(() => {
-    const session = localStorage.getItem('metal_drops_session');
-    if (session) {
-      const sessionData = JSON.parse(session);
-      setIsLoggedIn(true);
-      setUsername(sessionData.username);
-      
-      const users = getUsers();
-      const currentUser = users.find(u => u.username === sessionData.username);
-      if (currentUser) {
-        setBoughtProductIds(currentUser.boughtProductIds || []);
-        setLastClaimedAt(currentUser.lastClaimedAt || null);
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
       }
-    }
-    
-    const users = getUsers();
-    setUserCount(users.length);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setUsername(null);
+        setBoughtProductIds([]);
+        setLastClaimedAt(null);
+      }
+    });
+
+    // Fetch total user count
+    fetchUserCount();
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (email: string, password: string) => {
-    const users = getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username, bought_product_ids, last_claimed_at')
+      .eq('id', userId)
+      .single();
 
-    if (user) {
-      setIsLoggedIn(true);
-      setUsername(user.username);
-      setBoughtProductIds(user.boughtProductIds || []);
-      setLastClaimedAt(user.lastClaimedAt || null);
-      localStorage.setItem('metal_drops_session', JSON.stringify({ username: user.username }));
-      return { success: true, message: user.username };
+    if (data && !error) {
+      setUsername(data.username);
+      setBoughtProductIds(data.bought_product_ids || []);
+      setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
     }
-    return { success: false, message: "Invalid email or password" };
   };
 
-  const register = (newUser: User) => {
-    const users = getUsers();
-    if (users.find(u => u.email === newUser.email)) {
-      return { success: false, message: "Email already registered" };
-    }
-    if (users.find(u => u.username === newUser.username)) {
-      return { success: false, message: "Username already taken" };
-    }
-
-    const userToSave = { ...newUser, boughtProductIds: [], lastClaimedAt: undefined };
-    const updatedUsers = [...users, userToSave];
-    updateUsers(updatedUsers);
-    setUserCount(updatedUsers.length);
+  const fetchUserCount = async () => {
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
     
-    setIsLoggedIn(true);
-    setUsername(newUser.username);
-    setBoughtProductIds([]);
-    setLastClaimedAt(null);
-    localStorage.setItem('metal_drops_session', JSON.stringify({ username: newUser.username }));
-    
-    return { success: true, message: "Registration successful" };
+    if (!error && count !== null) {
+      setUserCount(count);
+    }
   };
 
-  const sendResetCode = (email: string) => {
-    const users = getUsers();
-    const user = users.find(u => u.email === email);
-    
-    // For security, we check if user exists, but for testing we'll allow it
-    // In a real app, you might return success even if user doesn't exist to prevent email enumeration
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setActiveResetCodes(prev => ({ ...prev, [email]: code }));
-    
-    console.log(`Reset code for ${email}: ${code}`);
-    
-    if (!user) {
-      return { success: false, message: "Email not found in our records" };
-    }
-
-    return { success: true, message: "Reset code sent to your email", code };
-  };
-
-  const resetPassword = (email: string, newPassword: string) => {
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1) {
-      return { success: false, message: "Email not found" };
-    }
-
-    users[userIndex].password = newPassword;
-    updateUsers(users);
-    
-    setActiveResetCodes(prev => {
-      const next = { ...prev };
-      delete next[email];
-      return next;
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    return { success: true, message: "Password updated successfully" };
+    if (error) return { success: false, message: error.message };
+    if (data.user) {
+      await fetchProfile(data.user.id);
+      return { success: true, message: username || data.user.email || '' };
+    }
+    return { success: false, message: "Login failed" };
   };
 
-  const addBoughtProducts = (ids: number[]) => {
-    if (!username) return;
-    
-    const users = getUsers();
-    const updatedUsers = users.map(u => {
-      if (u.username === username) {
-        const currentIds = u.boughtProductIds || [];
-        const newIds = Array.from(new Set([...currentIds, ...ids]));
-        setBoughtProductIds(newIds);
-        return { ...u, boughtProductIds: newIds };
+  const register = async ({ username, email, password }: { username: string; email: string; password: string }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
       }
-      return u;
     });
-    
-    updateUsers(updatedUsers);
+
+    if (error) return { success: false, message: error.message };
+    if (data.user) {
+      await fetchUserCount();
+      return { success: true, message: "Registration successful" };
+    }
+    return { success: false, message: "Registration failed" };
   };
 
-  const claimDailyAccount = () => {
-    if (!username) return;
-    
-    const now = Date.now();
-    const users = getUsers();
-    const updatedUsers = users.map(u => {
-      if (u.username === username) {
-        setLastClaimedAt(now);
-        return { ...u, lastClaimedAt: now };
-      }
-      return u;
-    });
-    
-    updateUsers(updatedUsers);
-  };
-
-  const logout = () => {
-    setIsLoggedIn(false);
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
     setUsername(null);
     setBoughtProductIds([]);
     setLastClaimedAt(null);
-    localStorage.removeItem('metal_drops_session');
+  };
+
+  const addBoughtProducts = async (ids: number[]) => {
+    if (!user) return;
+    
+    const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
+    const { error } = await supabase
+      .from('profiles')
+      .update({ bought_product_ids: newIds })
+      .eq('id', user.id);
+
+    if (!error) {
+      setBoughtProductIds(newIds);
+    }
+  };
+
+  const claimDailyAccount = async () => {
+    if (!user) return;
+    
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ last_claimed_at: now })
+      .eq('id', user.id);
+
+    if (!error) {
+      setLastClaimedAt(new Date(now).getTime());
+    }
+  };
+
+  const sendResetCode = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/forgot-password`,
+    });
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: "Reset link sent to your email" };
+  };
+
+  const resetPassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: "Password updated successfully" };
   };
 
   return (
     <AuthContext.Provider value={{ 
-      isLoggedIn, 
+      isLoggedIn: !!user, 
       username, 
       userCount, 
       boughtProductIds, 

@@ -14,6 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { login, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
@@ -23,7 +24,7 @@ const Login = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -32,14 +33,19 @@ const Login = () => {
       return;
     }
 
-    const result = login(email, password);
-    
-    if (result.success) {
-      showSuccess(`Welcome back, ${result.message}!`);
-      navigate('/');
-    } else {
-      setError(result.message);
-      showError(result.message);
+    setIsLoading(true);
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        showSuccess(`Welcome back, ${result.message}!`);
+        navigate('/');
+      } else {
+        setError(result.message);
+        showError(result.message);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -105,8 +111,12 @@ const Login = () => {
               />
             </div>
             
-            <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-              SIGN IN <LogIn className="ml-3 h-4 w-4" />
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
+            >
+              {isLoading ? "SIGNING IN..." : "SIGN IN"} <LogIn className="ml-3 h-4 w-4" />
             </Button>
           </form>
           

@@ -15,6 +15,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { register, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +25,7 @@ const Register = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -33,14 +34,19 @@ const Register = () => {
       return;
     }
 
-    const result = register({ username, email, password });
-    
-    if (result.success) {
-      showSuccess(`Account created! Welcome, ${username}!`);
-      navigate('/');
-    } else {
-      setError(result.message);
-      showError(result.message);
+    setIsLoading(true);
+    try {
+      const result = await register({ username, email, password });
+      
+      if (result.success) {
+        showSuccess(`Account created! Welcome, ${username}!`);
+        navigate('/');
+      } else {
+        setError(result.message);
+        showError(result.message);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -119,8 +125,12 @@ const Register = () => {
               <label htmlFor="terms" className="text-[10px] font-black uppercase tracking-widest text-gray-500">I agree to the <button type="button" className="text-red-600 hover:underline">Terms</button></label>
             </div>
             
-            <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-              CREATE ACCOUNT <UserPlus className="ml-3 h-4 w-4" />
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
+            >
+              {isLoading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"} <UserPlus className="ml-3 h-4 w-4" />
             </Button>
           </form>
           
