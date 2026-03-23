@@ -5,33 +5,73 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [generatedCode, setGeneratedCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1: Email, 2: Code, 3: New Password, 4: Success
   const [error, setError] = useState<string | null>(null);
-  const { resetPassword } = useAuth();
+  const { sendResetCode, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  const handleReset = (e: React.FormEvent) => {
+  const handleSendCode = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!email || !newPassword) {
-      setError("Please fill in all fields");
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    const result = sendResetCode(email);
+    
+    if (result.success) {
+      setGeneratedCode(result.code || '');
+      setStep(2);
+      showSuccess("Verification code sent to your email!");
+      // For demo purposes, we'll show the code in a toast too
+      setTimeout(() => {
+        showSuccess(`Demo Code: ${result.code}`);
+      }, 1000);
+    } else {
+      setError(result.message);
+      showError(result.message);
+    }
+  };
+
+  const handleVerifyCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (code === generatedCode) {
+      setStep(3);
+      showSuccess("Code verified successfully!");
+    } else {
+      setError("Invalid verification code");
+      showError("Invalid verification code");
+    }
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!newPassword) {
+      setError("Please enter a new password");
       return;
     }
 
     const result = resetPassword(email, newPassword);
     
     if (result.success) {
-      setStep(2);
-      showSuccess("Password reset successfully!");
+      setStep(4);
+      showSuccess("Password updated successfully!");
     } else {
       setError(result.message);
       showError(result.message);
@@ -55,18 +95,23 @@ const ForgotPassword = () => {
           <div className="text-center mb-10">
             <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">RECOVER ACCESS</h1>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">Reset your account password</p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">
+              {step === 1 && "Enter your email to receive a code"}
+              {step === 2 && "Enter the 6-digit verification code"}
+              {step === 3 && "Set your new account password"}
+              {step === 4 && "Account recovered successfully"}
+            </p>
           </div>
           
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {step === 1 && (
               <motion.form 
                 key="step1"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-8" 
-                onSubmit={handleReset}
+                onSubmit={handleSendCode}
               >
                 {error && (
                   <div className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest">
@@ -87,6 +132,64 @@ const ForgotPassword = () => {
                   />
                 </div>
                 
+                <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+                  SEND RESET CODE <Mail className="ml-3 h-4 w-4" />
+                </Button>
+              </motion.form>
+            )}
+
+            {step === 2 && (
+              <motion.form 
+                key="step2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-8" 
+                onSubmit={handleVerifyCode}
+              >
+                {error && (
+                  <div className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <Label htmlFor="code" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Verification Code</Label>
+                  <Input 
+                    id="code" 
+                    type="text" 
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="123456" 
+                    maxLength={6}
+                    className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50 text-center text-2xl tracking-[0.5em] font-black"
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+                  VERIFY CODE <ShieldCheck className="ml-3 h-4 w-4" />
+                </Button>
+                
+                <button 
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-full text-[10px] text-gray-500 font-black uppercase tracking-widest hover:text-white transition-colors"
+                >
+                  Change Email
+                </button>
+              </motion.form>
+            )}
+
+            {step === 3 && (
+              <motion.form 
+                key="step3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-8" 
+                onSubmit={handleUpdatePassword}
+              >
                 <div className="space-y-3">
                   <Label htmlFor="newPassword" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">New Password</Label>
                   <Input 
@@ -100,12 +203,14 @@ const ForgotPassword = () => {
                 </div>
                 
                 <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-                  RESET PASSWORD <KeyRound className="ml-3 h-4 w-4" />
+                  UPDATE PASSWORD <KeyRound className="ml-3 h-4 w-4" />
                 </Button>
               </motion.form>
-            ) : (
+            )}
+
+            {step === 4 && (
               <motion.div 
-                key="step2"
+                key="step4"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center space-y-8"

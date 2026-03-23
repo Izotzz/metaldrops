@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => void;
   addBoughtProducts: (ids: number[]) => void;
   claimDailyAccount: () => void;
+  sendResetCode: (email: string) => { success: boolean; message: string; code?: string };
   resetPassword: (email: string, newPassword: string) => { success: boolean; message: string };
 }
 
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userCount, setUserCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
+  const [activeResetCodes, setActiveResetCodes] = useState<Record<string, string>>({});
 
   const getUsers = (): User[] => {
     const users = localStorage.getItem('metal_drops_users');
@@ -71,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBoughtProductIds(user.boughtProductIds || []);
       setLastClaimedAt(user.lastClaimedAt || null);
       localStorage.setItem('metal_drops_session', JSON.stringify({ username: user.username }));
-      return { success: true, message: "Login successful" };
+      return { success: true, message: user.username };
     }
     return { success: false, message: "Invalid email or password" };
   };
@@ -99,6 +101,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, message: "Registration successful" };
   };
 
+  const sendResetCode = (email: string) => {
+    const users = getUsers();
+    const user = users.find(u => u.email === email);
+    
+    if (!user) {
+      return { success: false, message: "Email not found" };
+    }
+
+    // Generate a random 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setActiveResetCodes(prev => ({ ...prev, [email]: code }));
+    
+    // In a real app, this would be sent via an email API
+    console.log(`Reset code for ${email}: ${code}`);
+    
+    return { success: true, message: "Reset code sent to your email", code };
+  };
+
   const resetPassword = (email: string, newPassword: string) => {
     const users = getUsers();
     const userIndex = users.findIndex(u => u.email === email);
@@ -109,6 +129,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     users[userIndex].password = newPassword;
     updateUsers(users);
+    
+    // Clear the used code
+    setActiveResetCodes(prev => {
+      const next = { ...prev };
+      delete next[email];
+      return next;
+    });
+
     return { success: true, message: "Password updated successfully" };
   };
 
@@ -165,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout, 
       addBoughtProducts,
       claimDailyAccount,
+      sendResetCode,
       resetPassword
     }}>
       {children}
