@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail, ShieldCheck } from 'lucide-react';
+import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,11 +17,13 @@ const ForgotPassword = () => {
   const [newPassword, setNewPassword] = useState('');
   const [step, setStep] = useState(1); // 1: Email, 2: Code, 3: New Password, 4: Success
   const [error, setError] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  
   const { sendResetCode, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  const handleSendCode = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendCode = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
 
     if (!email) {
@@ -34,15 +36,24 @@ const ForgotPassword = () => {
     if (result.success) {
       setGeneratedCode(result.code || '');
       setStep(2);
-      showSuccess("Verification code sent to your email!");
-      // For demo purposes, we'll show the code in a toast too
-      setTimeout(() => {
-        showSuccess(`Demo Code: ${result.code}`);
-      }, 1000);
+      showSuccess("Verification code generated!");
+      console.log("SIMULATED EMAIL SENT TO:", email, "CODE:", result.code);
     } else {
       setError(result.message);
       showError(result.message);
     }
+  };
+
+  const handleResendCode = () => {
+    setIsResending(true);
+    const result = sendResetCode(email);
+    setTimeout(() => {
+      if (result.success) {
+        setGeneratedCode(result.code || '');
+        showSuccess("New code generated!");
+      }
+      setIsResending(false);
+    }, 1000);
   };
 
   const handleVerifyCode = (e: React.FormEvent) => {
@@ -51,7 +62,7 @@ const ForgotPassword = () => {
 
     if (code === generatedCode) {
       setStep(3);
-      showSuccess("Code verified successfully!");
+      showSuccess("Identity verified!");
     } else {
       setError("Invalid verification code");
       showError("Invalid verification code");
@@ -154,6 +165,12 @@ const ForgotPassword = () => {
                   </div>
                 )}
 
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Simulated Email Content:</p>
+                  <p className="text-2xl font-black text-red-600 tracking-[0.3em]">{generatedCode}</p>
+                  <p className="text-[8px] text-gray-600 uppercase font-bold">(In a real app, this would be in your inbox)</p>
+                </div>
+
                 <div className="space-y-3">
                   <Label htmlFor="code" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Verification Code</Label>
                   <Input 
@@ -161,23 +178,27 @@ const ForgotPassword = () => {
                     type="text" 
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    placeholder="123456" 
+                    placeholder="000000" 
                     maxLength={6}
                     className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50 text-center text-2xl tracking-[0.5em] font-black"
                   />
                 </div>
                 
-                <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-                  VERIFY CODE <ShieldCheck className="ml-3 h-4 w-4" />
-                </Button>
-                
-                <button 
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-full text-[10px] text-gray-500 font-black uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  Change Email
-                </button>
+                <div className="space-y-4">
+                  <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+                    VERIFY CODE <ShieldCheck className="ml-3 h-4 w-4" />
+                  </Button>
+                  
+                  <button 
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={isResending}
+                    className="w-full flex items-center justify-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn("h-3 w-3", isResending && "animate-spin")} /> 
+                    {isResending ? "Resending..." : "Resend Code"}
+                  </button>
+                </div>
               </motion.form>
             )}
 
