@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Globe, MessageSquare } from 'lucide-react';
+import { ArrowRight, Gift, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -56,13 +56,17 @@ const Hero = () => {
               </Button>
             </Link>
             
-            <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
-              <Globe className="mr-3 h-4 w-4" /> Web Tools
-            </Button>
+            <Link to="/daily">
+              <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
+                <Gift className="mr-3 h-4 w-4 text-red-600" /> Daily Account
+              </Button>
+            </Link>
             
-            <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
-              <MessageSquare className="mr-3 h-4 w-4" /> Discord
-            </Button>
+            <a href="https://discord.gg/mNVCXqJADW" target="_blank" rel="noopener noreferrer">
+              <Button size="lg" variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
+                <MessageSquare className="mr-3 h-4 w-4" /> Discord
+              </Button>
+            </a>
           </motion.div>
         </div>
       </motion.div>

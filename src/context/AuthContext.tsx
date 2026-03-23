@@ -7,7 +7,7 @@ interface User {
   email: string;
   password?: string;
   boughtProductIds?: number[];
-  lastClaimedAt?: number; // Timestamp of last claim
+  lastClaimedAt?: number;
 }
 
 interface AuthContextType {
@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => void;
   addBoughtProducts: (ids: number[]) => void;
   claimDailyAccount: () => void;
+  resetPassword: (email: string, newPassword: string) => { success: boolean; message: string };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,6 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, message: "Registration successful" };
   };
 
+  const resetPassword = (email: string, newPassword: string) => {
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.email === email);
+    
+    if (userIndex === -1) {
+      return { success: false, message: "Email not found" };
+    }
+
+    users[userIndex].password = newPassword;
+    updateUsers(users);
+    return { success: true, message: "Password updated successfully" };
+  };
+
   const addBoughtProducts = (ids: number[]) => {
     if (!username) return;
     
@@ -150,7 +164,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register, 
       logout, 
       addBoughtProducts,
-      claimDailyAccount
+      claimDailyAccount,
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>

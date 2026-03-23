@@ -1,73 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Gift, Clock, Lock, Sparkles } from 'lucide-react';
+import React from 'react';
+import { Gift, Lock, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
-import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
-const CLAIM_COOLDOWN = 10 * 60 * 60 * 1000; // 10 hours in milliseconds
-
-const ACCOUNTS = [
-  "Netflix Premium (4K)",
-  "Spotify Premium (Family)",
-  "Disney+ Premium",
-  "Hulu + Live TV",
-  "Crunchyroll Mega Fan",
-  "HBO Max Ad-Free",
-  "Paramount+ with SHOWTIME",
-  "YouTube Premium"
-];
-
 const DailyAccount = () => {
-  const { isLoggedIn, lastClaimedAt, claimDailyAccount } = useAuth();
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-
-  useEffect(() => {
-    if (!lastClaimedAt) {
-      setTimeLeft(0);
-      return;
-    }
-
-    const calculateTimeLeft = () => {
-      const now = Date.now();
-      const diff = (lastClaimedAt + CLAIM_COOLDOWN) - now;
-      return diff > 0 ? diff : 0;
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
-    const timer = setInterval(() => {
-      const remaining = calculateTimeLeft();
-      setTimeLeft(remaining);
-      if (remaining <= 0) clearInterval(timer);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [lastClaimedAt]);
-
-  const formatTime = (ms: number) => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleClaim = () => {
-    if (!isLoggedIn) {
-      showError("Please login to claim your daily account");
-      return;
-    }
-
-    const randomAccount = ACCOUNTS[Math.floor(Math.random() * ACCOUNTS.length)];
-    claimDailyAccount();
-    showSuccess(`Success! You claimed: ${randomAccount}`);
-  };
-
-  const isCooldown = timeLeft > 0;
+  const { isLoggedIn } = useAuth();
 
   return (
     <section className="py-32 relative overflow-hidden">
@@ -112,38 +53,18 @@ const DailyAccount = () => {
                     </Button>
                   </Link>
                 </motion.div>
-              ) : isCooldown ? (
-                <motion.div
-                  key="cooldown"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-8"
-                >
-                  <div className="text-6xl md:text-8xl font-black text-white tracking-tighter font-mono">
-                    {formatTime(timeLeft)}
-                  </div>
-                  <div className="flex flex-col items-center gap-4">
-                    <p className="text-red-500 font-black uppercase tracking-[0.4em] text-[10px] animate-pulse">
-                      Come back in {Math.floor(timeLeft / (1000 * 60 * 60))} hours
-                    </p>
-                    <Button disabled className="bg-white/5 border border-white/10 text-gray-500 font-black h-16 px-12 rounded-2xl uppercase tracking-widest text-xs cursor-not-allowed">
-                      <Clock className="mr-3 h-5 w-5" /> Claimed
-                    </Button>
-                  </div>
-                </motion.div>
               ) : (
                 <motion.div
-                  key="claim-button"
+                  key="coming-soon"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
                   <Button 
-                    onClick={handleClaim}
-                    className="group bg-red-600 hover:bg-red-500 text-white font-black h-20 px-16 rounded-2xl shadow-[0_0_40px_rgba(220,38,38,0.4)] uppercase tracking-widest text-sm transition-all hover:scale-105"
+                    disabled
+                    className="bg-white/5 border border-white/10 text-gray-500 font-black h-20 px-16 rounded-2xl uppercase tracking-widest text-sm cursor-not-allowed"
                   >
-                    Claim Now <Sparkles className="ml-3 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                    <Clock className="mr-3 h-6 w-6 text-red-600" /> Coming Soon
                   </Button>
                 </motion.div>
               )}

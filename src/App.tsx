@@ -11,6 +11,7 @@ import DailyAccountPage from "./pages/DailyAccountPage";
 import Pastes from "./pages/Pastes";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import MyProducts from "./pages/MyProducts";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/pastes" element={<Pastes />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/my-products" element={<MyProducts />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
