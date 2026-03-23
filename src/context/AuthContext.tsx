@@ -30,52 +30,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        fetchProfile(session.user.id);
+        setUser(session.user);
+        await fetchProfile(session.user.id);
       }
-    });
+    };
+
+    initAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        fetchProfile(session.user.id);
+        setUser(session.user);
+        await fetchProfile(session.user.id);
       } else {
+        setUser(null);
         setUsername(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
+      
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        fetchUserCount();
+      }
     });
 
-    // Fetch total user count
     fetchUserCount();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username, bought_product_ids, last_claimed_at')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, bought_product_ids, last_claimed_at')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (data && !error) {
-      setUsername(data.username);
-      setBoughtProductIds(data.bought_product_ids || []);
-      setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      if (data && !error) {
+        setUsername(data.username);
+        setBoughtProductIds(data.bought_product_ids || []);
+        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
     }
   };
 
   const fetchUserCount = async () => {
-    const { count, error } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-    
-    if (!error && count !== null) {
-      setUserCount(count);
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setUserCount(count);
+      }
+    } catch (err) {
+      console.error("Error fetching user count:", err);
     }
   };
 
@@ -88,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) return { success: false, message: error.message };
     if (data.user) {
       await fetchProfile(data.user.id);
-      return { success: true, message: username || data.user.email || '' };
+      return { success: true, message: username || data.user.email || 'User' };
     }
     return { success: false, message: "Login failed" };
   };
@@ -104,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { success: false, message: error.message };
     if (data.user) {
+      // El trigger en la DB creará el perfil automáticamente
       await fetchUserCount();
       return { success: true, message: "Registration successful" };
     }
