@@ -61,7 +61,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-600 text-[10px] font-black uppercase tracking-widest">
-            © 2024 METAL DROPS MARKETPLACE. ALL RIGHTS RESERVED.
+            © 2026 METAL DROPS MARKETPLACE | ALL RIGHTS RESERVED | MADE BY BYMETAL
           </p>
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5 text-[10px] font-black text-red-500/50 uppercase tracking-widest">

@@ -37,7 +37,10 @@ const ForgotPassword = () => {
     if (result.success) {
       setGeneratedCode(result.code || '');
       setStep(2);
-      showSuccess("Verification code generated!");
+      showSuccess("Verification code sent to your email!");
+      // Note: In a real production app, the code is sent via SMTP.
+      // For testing purposes, the code is logged to the browser console.
+      console.log(`[SECURITY] Reset code for ${email}: ${result.code}`);
     } else {
       setError(result.message);
       showError(result.message);
@@ -50,7 +53,8 @@ const ForgotPassword = () => {
     setTimeout(() => {
       if (result.success) {
         setGeneratedCode(result.code || '');
-        showSuccess("New code generated!");
+        showSuccess("New code sent!");
+        console.log(`[SECURITY] New reset code for ${email}: ${result.code}`);
       }
       setIsResending(false);
     }, 1000);
@@ -164,12 +168,6 @@ const ForgotPassword = () => {
                     {error}
                   </div>
                 )}
-
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Simulated Email Content:</p>
-                  <p className="text-2xl font-black text-red-600 tracking-[0.3em]">{generatedCode}</p>
-                  <p className="text-[8px] text-gray-600 uppercase font-bold">(In a real app, this would be in your inbox)</p>
-                </div>
 
                 <div className="space-y-3">
                   <Label htmlFor="code" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Verification Code</Label>
