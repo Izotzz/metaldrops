@@ -6,7 +6,7 @@ import { Bell, User, LogOut, Menu, LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import CartSheet from './CartSheet';
 
@@ -15,7 +15,18 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { isLoggedIn, username, logout } = useAuth();
   const [bannerActive, setBannerActive] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const { scrollY } = useScroll();
   
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    if (latest > previous && latest > 150) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+  });
+
   useEffect(() => {
     const checkBanner = () => {
       const dismissed = sessionStorage.getItem('auth-banner-dismissed');
@@ -42,13 +53,15 @@ const Navbar = () => {
 
   return (
     <motion.div 
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ 
-        y: 0, 
-        opacity: 1,
+      variants={{
+        visible: { y: 0, opacity: 1 },
+        hidden: { y: -150, opacity: 0 }
+      }}
+      animate={hidden ? "hidden" : "visible"}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      style={{ 
         top: bannerActive ? '80px' : '24px' 
       }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       className="fixed left-0 right-0 z-50 px-4 transition-[top] duration-500"
     >
       <nav className="container mx-auto max-w-6xl h-16 flex items-center justify-between px-6 rounded-2xl border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
