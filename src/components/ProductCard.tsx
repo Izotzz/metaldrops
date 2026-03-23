@@ -28,15 +28,6 @@ const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted
     sparkles: Sparkles,
   }[iconType];
 
-  // Secure Unsplash images for each category
-  const categoryImage = {
-    mail: "https://images.unsplash.com/photo-1557200134-90327ee9fafa?q=80&w=500&auto=format&fit=crop",
-    folder: "https://images.unsplash.com/photo-1544396821-4dd40b938ad3?q=80&w=500&auto=format&fit=crop",
-    cookie: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?q=80&w=500&auto=format&fit=crop",
-    card: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=500&auto=format&fit=crop",
-    sparkles: "https://images.unsplash.com/photo-1614332287897-cdc485fa562d?q=80&w=500&auto=format&fit=crop",
-  }[iconType];
-
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart({ id, name, price: 29.99, iconType });
@@ -51,36 +42,27 @@ const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted
       whileHover={{ y: -10 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "group relative flex flex-col rounded-[2.5rem] bg-[#050505] border transition-all duration-500 overflow-hidden",
+        "group relative flex flex-col rounded-[2.5rem] bg-[#050505] border transition-all duration-500 overflow-hidden p-10",
         isHighlighted 
           ? "border-red-600/40 shadow-[0_0_50px_rgba(220,38,38,0.15)]" 
           : "border-white/5 hover:border-red-600/30 hover:bg-[#080808] hover:shadow-[0_0_40px_rgba(220,38,38,0.1)]"
       )}
     >
-      {/* Product Image */}
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={categoryImage} 
-          alt={name} 
-          className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700 grayscale group-hover:grayscale-0"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
-        <div className="absolute top-6 left-6">
-          <motion.div 
-            whileHover={{ rotate: 12, scale: 1.1 }}
-            className="w-12 h-12 rounded-xl bg-red-600/20 backdrop-blur-md flex items-center justify-center border border-red-600/30"
-          >
-            <Icon className="w-6 h-6 text-red-600" />
-          </motion.div>
+      <div className="flex justify-between items-start mb-8">
+        <motion.div 
+          whileHover={{ rotate: 12, scale: 1.1 }}
+          className="w-14 h-14 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20"
+        >
+          <Icon className="w-7 h-7 text-red-600" />
+        </motion.div>
+        
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+          <Download className="w-3 h-3 text-red-600" />
+          {downloads}
         </div>
       </div>
 
-      <div className="p-10 pt-2 flex-1 relative z-10">
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] w-fit mb-6">
-          <Download className="w-3 h-3 text-red-600" />
-          {downloads} Downloads
-        </div>
-
+      <div className="flex-1">
         <h3 className={cn(
           "text-3xl font-black mb-4 tracking-tighter uppercase italic",
           isHighlighted ? "text-red-600" : "text-white group-hover:text-red-600 transition-colors"
