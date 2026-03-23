@@ -14,6 +14,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import MyProducts from "./pages/MyProducts";
 import NotFound from "./pages/NotFound";
+import AuthBanner from "./components/AuthBanner";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AuthBanner />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<Products />} />
