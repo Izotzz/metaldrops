@@ -13,11 +13,12 @@ interface ProductProps {
   name: string;
   description: string;
   downloads: number;
+  price: number;
   iconType: 'mail' | 'folder' | 'cookie' | 'card' | 'sparkles';
   isHighlighted?: boolean;
 }
 
-const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted }: ProductProps) => {
+const ProductCard = ({ id, name, description, downloads, price, iconType, isHighlighted }: ProductProps) => {
   const { addToCart } = useCart();
   
   const Icon = {
@@ -30,7 +31,7 @@ const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart({ id, name, price: 29.99, iconType });
+    addToCart({ id, name, price, iconType });
     showSuccess(`${name} added to cart!`);
   };
 
@@ -74,7 +75,7 @@ const ProductCard = ({ id, name, description, downloads, iconType, isHighlighted
         </p>
 
         <div className="mt-auto flex items-center justify-between">
-          <div className="text-xl font-black text-white">$29.99</div>
+          <div className="text-xl font-black text-white">{price.toFixed(2)}€</div>
           <Button 
             onClick={handleAddToCart}
             className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12 px-6 uppercase tracking-widest text-[10px]"

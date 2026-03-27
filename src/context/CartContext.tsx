@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface CartItem {
   id: number;
@@ -27,19 +27,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const removeFromCart = (id: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    // Remove only one instance of the item
+    setItems((prev) => {
+      const index = prev.findIndex(item => item.id === id);
+      if (index > -1) {
+        const newItems = [...prev];
+        newItems.splice(index, 1);
+        return newItems;
+      }
+      return prev;
+    });
   };
 
   const clearCart = () => {
     setItems([]);
   };
 
-  const total = items.length * 29.99; // Mock price for all tools
+  const total = items.reduce((acc, item) => acc + item.price, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
+    <AuthContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
       {children}
-    </CartContext.Provider>
+    </AuthContext.Provider>
   );
 };
 

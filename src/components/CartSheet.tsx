@@ -57,7 +57,7 @@ const CartSheet = () => {
                 <div key={`${item.id}-${idx}`} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
                   <div>
                     <h4 className="font-black uppercase text-xs tracking-widest">{item.name}</h4>
-                    <p className="text-red-500 text-[10px] font-black mt-1">$29.99</p>
+                    <p className="text-red-500 text-[10px] font-black mt-1">{item.price.toFixed(2)}€</p>
                   </div>
                   <Button 
                     variant="ghost" 
@@ -74,7 +74,7 @@ const CartSheet = () => {
             <div className="mt-auto pt-8 border-t border-white/10 pb-10">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-gray-500 font-black uppercase tracking-widest text-xs">Total</span>
-                <span className="text-2xl font-black text-white">${total.toFixed(2)}</span>
+                <span className="text-2xl font-black text-white">{total.toFixed(2)}€</span>
               </div>
               <Button 
                 onClick={handleCheckout}
