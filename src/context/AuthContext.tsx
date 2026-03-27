@@ -8,6 +8,7 @@ import { showSuccess } from '@/utils/toast';
 interface AuthContextType {
   isLoggedIn: boolean;
   username: string | null;
+  role: string | null;
   userCount: number;
   boughtProductIds: number[];
   lastClaimedAt: number | null;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [userCount, setUserCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
@@ -45,15 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         await fetchProfile(session.user.id);
         
-        // Si el evento es SIGNED_IN y venimos de una confirmación de email
         if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
           showSuccess("Email confirmed! Welcome to Metal Drops.");
-          // Limpiar el hash de la URL para que no se quede el token ahí
           window.history.replaceState(null, '', window.location.pathname);
         }
       } else {
         setUser(null);
         setUsername(null);
+        setRole(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
@@ -72,12 +73,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, bought_product_ids, last_claimed_at')
+        .select('username, role, bought_product_ids, last_claimed_at')
         .eq('id', userId)
         .maybeSingle();
 
       if (data && !error) {
         setUsername(data.username);
+        setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
       }
@@ -149,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setUsername(null);
+    setRole(null);
     setBoughtProductIds([]);
     setLastClaimedAt(null);
   };
@@ -199,6 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{ 
       isLoggedIn: !!user, 
       username, 
+      role,
       userCount, 
       boughtProductIds, 
       lastClaimedAt,

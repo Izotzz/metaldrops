@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, ChevronRight, Clock, Eye, MessageSquare, LogIn, X } from 'lucide-react';
+import { FileText, Plus, ChevronRight, Clock, Eye, MessageSquare, LogIn, X, ShieldAlert } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
@@ -23,10 +23,12 @@ interface Paste {
 }
 
 const Pastes = () => {
-  const { isLoggedIn, username } = useAuth();
+  const { isLoggedIn, username, role } = useAuth();
   const [pastes, setPastes] = useState<Paste[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPaste, setNewPaste] = useState({ title: '', content: '' });
+
+  const isDropper = role === 'dropper';
 
   const handleCreatePaste = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,14 +68,7 @@ const Pastes = () => {
               <p className="text-gray-500 font-black mt-3 uppercase tracking-[0.3em] text-[10px]">Share and discover digital assets</p>
             </div>
             
-            {isLoggedIn ? (
-              <Button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl h-16 px-10 shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
-              >
-                <Plus className="mr-3 h-5 w-5" /> Create Paste
-              </Button>
-            ) : (
+            {!isLoggedIn ? (
               <Link to="/login">
                 <Button 
                   className="bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black rounded-2xl h-16 px-10 uppercase tracking-widest text-xs"
@@ -81,6 +76,25 @@ const Pastes = () => {
                   Access for uploading pastes <LogIn className="ml-3 h-5 w-5 text-red-600" />
                 </Button>
               </Link>
+            ) : isDropper ? (
+              <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl h-16 px-10 shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
+              >
+                <Plus className="mr-3 h-5 w-5" /> Create Paste
+              </Button>
+            ) : (
+              <div className="flex flex-col items-end gap-2">
+                <Button 
+                  disabled
+                  className="bg-white/5 border border-white/10 text-gray-500 font-black rounded-2xl h-16 px-10 uppercase tracking-widest text-xs cursor-not-allowed opacity-50"
+                >
+                  <ShieldAlert className="mr-3 h-5 w-5 text-red-600" /> Create Paste
+                </Button>
+                <span className="text-[9px] font-black text-red-600 uppercase tracking-widest animate-pulse">
+                  Only droppers can upload pastes
+                </span>
+              </div>
             )}
           </motion.div>
 
