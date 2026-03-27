@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           window.history.replaceState(null, '', window.location.pathname);
         }
       } else {
+        // Limpiar todo el estado cuando no hay sesión
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -148,12 +149,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    // 1. Cerrar sesión en Supabase
     await supabase.auth.signOut();
+    
+    // 2. Limpiar estado local inmediatamente
     setUser(null);
     setUsername(null);
     setRole(null);
     setBoughtProductIds([]);
     setLastClaimedAt(null);
+    
+    // 3. Limpiar almacenamiento local por seguridad
+    localStorage.removeItem('supabase.auth.token');
   };
 
   const addBoughtProducts = async (ids: number[]) => {
