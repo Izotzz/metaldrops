@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2, CreditCard } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { showSuccess, showError } from '@/utils/toast';
+import { showError } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 
 const CartSheet = () => {
-  const { items, removeFromCart, clearCart, total } = useCart();
-  const { isLoggedIn, addBoughtProducts } = useAuth();
+  const { items, removeFromCart, total } = useCart();
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -21,11 +21,8 @@ const CartSheet = () => {
       return;
     }
     
-    const productIds = items.map(item => item.id);
-    addBoughtProducts(productIds);
-    showSuccess("Purchase successful! Products added to your library.");
-    clearCart();
-    navigate('/my-products');
+    // Redirigir a la página de Checkout
+    navigate('/checkout');
   };
 
   return (
