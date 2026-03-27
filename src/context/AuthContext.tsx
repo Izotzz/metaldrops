@@ -101,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) return { success: false, message: error.message };
     if (data.user) {
       await fetchProfile(data.user.id);
-      // Intentar obtener el username del perfil recién cargado
       const { data: profile } = await supabase
         .from('profiles')
         .select('username')
@@ -118,16 +117,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
       options: {
-        data: { username }
+        data: { username },
+        emailRedirectTo: window.location.origin // Redirige a la URL actual de la app
       }
     });
 
     if (error) return { success: false, message: error.message };
     
     if (data.user) {
-      // Si no hay sesión inmediata (por confirmación de email), intentamos loguear
       if (!data.session) {
-        return await login(email, password);
+        return { success: true, message: "Please check your email to confirm your account." };
       }
       
       setUser(data.user);
