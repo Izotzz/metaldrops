@@ -20,7 +20,6 @@ const Navbar = () => {
   
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
-    // Ocultar si bajamos más de 150px, mostrar si subimos
     if (latest > previous && latest > 150) {
       setHidden(true);
     } else {
@@ -46,10 +45,14 @@ const Navbar = () => {
     { name: 'Pastes', path: '/pastes' },
   ];
 
-  const handleLogout = () => {
-    logout();
-    showSuccess("Logged out successfully");
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      showSuccess("Logged out successfully");
+      navigate('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
