@@ -46,9 +46,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const total = items.reduce((acc, item) => acc + item.price, 0);
 
   return (
-    <AuthContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
       {children}
-    </AuthContext.Provider>
+    </CartContext.Provider>
   );
 };
 
