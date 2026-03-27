@@ -10,17 +10,20 @@ import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isDisposableEmail } from '@/utils/email';
-import SecurityCaptcha from '@/components/SecurityCaptcha';
+import Turnstile from "react-turnstile";
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { register, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+
+  // REEMPLAZA ESTO CON TU SITE KEY DE CLOUDFLARE
+  const TURNSTILE_SITE_KEY = "0x4AAAAAAA_YOUR_SITE_KEY";
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -38,31 +41,33 @@ const Register = () => {
     }
 
     if (isDisposableEmail(email)) {
-      const msg = "Temporary emails are not allowed for security reasons.";
-      setError(msg);
-      showError(msg);
+      setError("Temporary emails are not allowed.");
       return;
     }
 
-    if (!isVerified) {
-      setError("Please complete the security verification");
+    if (!captchaToken) {
+      setError("Please complete the security verification.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const result = await register({ username, email, password });
+      const result = await register({ 
+        username, 
+        email, 
+        password, 
+        captchaToken 
+      });
       
       if (result.success) {
-        showSuccess(`Account created! Welcome, ${username}!`);
-        navigate('/');
-      } else {
-        // Si el error es de captcha de Supabase, damos una instrucción clara
-        if (result.message.toLowerCase().includes('captcha')) {
-          setError("Security verification failed. If this persists, please contact support.");
+        showSuccess(result.message);
+        if (result.message.includes("check your email")) {
+          navigate('/login');
         } else {
-          setError(result.message);
+          navigate('/');
         }
+      } else {
+        setError(result.message);
         showError(result.message);
       }
     } finally {
@@ -140,7 +145,13 @@ const Register = () => {
               />
             </div>
 
-            <SecurityCaptcha onVerify={setIsVerified} />
+            <div className="flex justify-center py-2">
+              <Turnstile
+                sitekey={TURNSTILE_SITE_KEY}
+                onVerify={(token) => setCaptchaToken(token)}
+                theme="dark"
+              />
+            </div>
 
             <div className="flex items-center gap-2 py-2">
               <input type="checkbox" id="terms" required className="rounded border-white/10 bg-black text-red-600 focus:ring-red-600" />

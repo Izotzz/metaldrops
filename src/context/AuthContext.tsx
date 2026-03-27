@@ -13,7 +13,7 @@ interface AuthContextType {
   boughtProductIds: number[];
   lastClaimedAt: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (data: { username: string; email: string; password: string }) => Promise<{ success: boolean; message: string }>;
+  register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;
@@ -46,13 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
-        
-        if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
-          showSuccess("Email confirmed! Welcome to Metal Drops.");
-          window.history.replaceState(null, '', window.location.pathname);
-        }
       } else {
-        // Limpiar todo el estado cuando no hay sesión
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -112,24 +106,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) return { success: false, message: error.message };
     if (data.user) {
       await fetchProfile(data.user.id);
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', data.user.id)
-        .single();
-      
-      return { success: true, message: profile?.username || data.user.email || 'User' };
+      return { success: true, message: username || data.user.email || 'User' };
     }
     return { success: false, message: "Login failed" };
   };
 
-  const register = async ({ username, email, password }: { username: string; email: string; password: string }) => {
+  const register = async ({ username, email, password, captchaToken }: { username: string; email: string; password: string; captchaToken?: string }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { username },
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: window.location.origin,
+        captchaToken: captchaToken // Enviamos el token de Turnstile aquí
       }
     });
 
@@ -139,56 +128,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!data.session) {
         return { success: true, message: "Please check your email to confirm your account." };
       }
-      
       setUser(data.user);
       await fetchProfile(data.user.id);
-      await fetchUserCount();
       return { success: true, message: "Registration successful" };
     }
     return { success: false, message: "Registration failed" };
   };
 
   const logout = async () => {
-    // 1. Cerrar sesión en Supabase
     await supabase.auth.signOut();
-    
-    // 2. Limpiar estado local inmediatamente
     setUser(null);
     setUsername(null);
     setRole(null);
     setBoughtProductIds([]);
     setLastClaimedAt(null);
-    
-    // 3. Limpiar almacenamiento local por seguridad
-    localStorage.removeItem('supabase.auth.token');
   };
 
   const addBoughtProducts = async (ids: number[]) => {
     if (!user) return;
-    
     const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
-    const { error } = await supabase
-      .from('profiles')
-      .update({ bought_product_ids: newIds })
-      .eq('id', user.id);
-
-    if (!error) {
-      setBoughtProductIds(newIds);
-    }
+    const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
+    if (!error) setBoughtProductIds(newIds);
   };
 
   const claimDailyAccount = async () => {
     if (!user) return;
-    
     const now = new Date().toISOString();
-    const { error } = await supabase
-      .from('profiles')
-      .update({ last_claimed_at: now })
-      .eq('id', user.id);
-
-    if (!error) {
-      setLastClaimedAt(new Date(now).getTime());
-    }
+    const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
+    if (!error) setLastClaimedAt(new Date(now).getTime());
   };
 
   const sendResetCode = async (email: string) => {
@@ -196,13 +163,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       redirectTo: `${window.location.origin}/forgot-password`,
     });
     if (error) return { success: false, message: error.message };
-    return { success: true, message: "Reset link sent to your email" };
+    return { success: true, message: "Reset link sent" };
   };
 
   const resetPassword = async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) return { success: false, message: error.message };
-    return { success: true, message: "Password updated successfully" };
+    return { success: true, message: "Password updated" };
   };
 
   return (
@@ -228,8 +195,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
