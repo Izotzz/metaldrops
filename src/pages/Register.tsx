@@ -10,11 +10,13 @@ import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isDisposableEmail } from '@/utils/email';
+import SecurityCaptcha from '@/components/SecurityCaptcha';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { register, isLoggedIn } = useAuth();
@@ -42,6 +44,11 @@ const Register = () => {
       return;
     }
 
+    if (!isVerified) {
+      setError("Please complete the security verification");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await register({ username, email, password });
@@ -50,7 +57,12 @@ const Register = () => {
         showSuccess(`Account created! Welcome, ${username}!`);
         navigate('/');
       } else {
-        setError(result.message);
+        // Si el error es de captcha de Supabase, damos una instrucción clara
+        if (result.message.toLowerCase().includes('captcha')) {
+          setError("Security verification failed. If this persists, please contact support.");
+        } else {
+          setError(result.message);
+        }
         showError(result.message);
       }
     } finally {
@@ -127,6 +139,8 @@ const Register = () => {
                 className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
               />
             </div>
+
+            <SecurityCaptcha onVerify={setIsVerified} />
 
             <div className="flex items-center gap-2 py-2">
               <input type="checkbox" id="terms" required className="rounded border-white/10 bg-black text-red-600 focus:ring-red-600" />
