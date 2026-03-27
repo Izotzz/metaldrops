@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
   useEffect(() => {
-    // Check initial session
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -40,7 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -103,7 +101,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) return { success: false, message: error.message };
     if (data.user) {
       await fetchProfile(data.user.id);
-      return { success: true, message: username || data.user.email || 'User' };
+      // Intentar obtener el username del perfil recién cargado
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', data.user.id)
+        .single();
+      
+      return { success: true, message: profile?.username || data.user.email || 'User' };
     }
     return { success: false, message: "Login failed" };
   };
@@ -118,8 +123,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) return { success: false, message: error.message };
+    
     if (data.user) {
-      // El trigger en la DB creará el perfil automáticamente
+      // Si no hay sesión inmediata (por confirmación de email), intentamos loguear
+      if (!data.session) {
+        return await login(email, password);
+      }
+      
+      setUser(data.user);
+      await fetchProfile(data.user.id);
       await fetchUserCount();
       return { success: true, message: "Registration successful" };
     }
