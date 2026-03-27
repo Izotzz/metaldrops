@@ -20,6 +20,7 @@ const Navbar = () => {
   
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
+    // Ocultar si bajamos más de 150px, mostrar si subimos
     if (latest > previous && latest > 150) {
       setHidden(true);
     } else {
