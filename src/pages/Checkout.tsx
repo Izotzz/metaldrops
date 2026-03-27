@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, ShieldCheck, ArrowLeft, Lock, CheckCircle2 } from 'lucide-react';
+import { CreditCard, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,7 +20,6 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Form states
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -37,21 +36,86 @@ const Checkout = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
+    // Formateo automático para tarjeta y expiración
+    let formattedValue = value;
+    if (id === 'cardNumber') {
+      formattedValue = value.replace(/\D/g, '').substring(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+    } else if (id === 'expiry') {
+      formattedValue = value.replace(/\D/g, '').substring(0, 4).replace(/(\d{2})(?=\d)/g, '$1/');
+    } else if (id === 'cvc') {
+      formattedValue = value.replace(/\D/g, '').substring(0, 4);
+    }
+    
+    setFormData(prev => ({ ...prev, [id]: formattedValue }));
+  };
+
+  // Algoritmo de Luhn para validar tarjetas de crédito reales
+  const validateCardNumber = (number: string) => {
+    const digits = number.replace(/\s/g, '');
+    if (!/^\d{13,19}$/.test(digits)) return false;
+    
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let digit = parseInt(digits.charAt(i));
+      if (shouldDouble) {
+        if ((digit *= 2) > 9) digit -= 9;
+      }
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return (sum % 10) === 0;
+  };
+
+  const validateForm = () => {
+    const { fullName, email, address, city, zipCode, cardNumber, expiry, cvc } = formData;
+
+    if (!fullName || !email || !address || !city || !zipCode || !cardNumber || !expiry || !cvc) {
+      showError("All fields are required");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("Invalid email address");
+      return false;
+    }
+
+    if (!validateCardNumber(cardNumber)) {
+      showError("Invalid credit card number");
+      return false;
+    }
+
+    const expiryMatch = expiry.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/);
+    if (!expiryMatch) {
+      showError("Invalid expiry date (MM/YY)");
+      return false;
+    }
+
+    const month = parseInt(expiryMatch[1]);
+    const year = parseInt("20" + expiryMatch[2]);
+    const now = new Date();
+    const expiryDate = new Date(year, month - 1);
+    if (expiryDate < new Date(now.getFullYear(), now.getMonth())) {
+      showError("Card has expired");
+      return false;
+    }
+
+    if (cvc.length < 3) {
+      showError("Invalid CVC");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (Object.values(formData).some(val => !val)) {
-      showError("Please fill in all fields");
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsProcessing(true);
 
-    // Simulate payment processing delay
+    // Simulación de procesamiento bancario
     setTimeout(async () => {
       const productIds = items.map(item => item.id);
       await addBoughtProducts(productIds);
@@ -59,13 +123,12 @@ const Checkout = () => {
       setIsProcessing(false);
       setIsSuccess(true);
       clearCart();
-      showSuccess("Payment processed successfully!");
+      showSuccess("Payment authorized by bank!");
       
-      // Redirect after a short delay to show success state
       setTimeout(() => {
         navigate('/my-products');
       }, 3000);
-    }, 2500);
+    }, 3000);
   };
 
   return (
@@ -100,17 +163,15 @@ const Checkout = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid grid-cols-1 lg:grid-cols-3 gap-12"
               >
-                {/* Left Column: Billing & Payment Form */}
                 <div className="lg:col-span-2 space-y-12">
                   <div className="mb-12">
                     <h1 className="text-7xl font-black text-white tracking-tighter uppercase italic">
                       Secure <span className="text-red-600">Checkout</span>
                     </h1>
-                    <p className="text-gray-500 font-black mt-3 uppercase tracking-[0.3em] text-[10px]">Complete your purchase securely</p>
+                    <p className="text-gray-500 font-black mt-3 uppercase tracking-[0.3em] text-[10px]">Bank-level encryption enabled</p>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-12">
-                    {/* Billing Information */}
                     <div className="space-y-8">
                       <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
                         <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
@@ -174,7 +235,6 @@ const Checkout = () => {
                       </div>
                     </div>
 
-                    {/* Payment Information */}
                     <div className="space-y-8">
                       <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
                         <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
@@ -225,12 +285,11 @@ const Checkout = () => {
                       disabled={isProcessing}
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-16 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
                     >
-                      {isProcessing ? "PROCESSING PAYMENT..." : `PAY ${total.toFixed(2)}€`} <Lock className="ml-3 h-4 w-4" />
+                      {isProcessing ? "AUTHORIZING..." : `PAY ${total.toFixed(2)}€`} <Lock className="ml-3 h-4 w-4" />
                     </Button>
                   </form>
                 </div>
 
-                {/* Right Column: Order Summary */}
                 <div className="lg:col-span-1">
                   <div className="sticky top-40 p-10 rounded-[2.5rem] bg-[#050505] border border-white/5">
                     <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-8">Order Summary</h3>
@@ -248,10 +307,6 @@ const Checkout = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Subtotal</span>
                         <span className="text-white font-black text-xs">{total.toFixed(2)}€</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Tax (0%)</span>
-                        <span className="text-white font-black text-xs">0.00€</span>
                       </div>
                       <div className="flex justify-between items-center pt-4">
                         <span className="text-white font-black uppercase tracking-widest text-xs">Total</span>
