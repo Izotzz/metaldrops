@@ -9,6 +9,7 @@ import { UserPlus, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isDisposableEmail } from '@/utils/email';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -31,6 +32,13 @@ const Register = () => {
 
     if (!username || !email || !password) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (isDisposableEmail(email)) {
+      const msg = "Temporary emails are not allowed for security reasons.";
+      setError(msg);
+      showError(msg);
       return;
     }
 
