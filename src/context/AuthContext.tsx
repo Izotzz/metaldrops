@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { showSuccess } from '@/utils/toast';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -43,6 +44,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
+        
+        // Si el evento es SIGNED_IN y venimos de una confirmación de email
+        if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+          showSuccess("Email confirmed! Welcome to Metal Drops.");
+          // Limpiar el hash de la URL para que no se quede el token ahí
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       } else {
         setUser(null);
         setUsername(null);
@@ -118,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: {
         data: { username },
-        emailRedirectTo: window.location.origin // Redirige a la URL actual de la app
+        emailRedirectTo: window.location.origin
       }
     });
 
