@@ -1,29 +1,49 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail, ShieldCheck, RefreshCw } from 'lucide-react';
+import { KeyRound, ArrowLeft, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [step, setStep] = useState(1); // 1: Email, 2: Code, 3: New Password, 4: Success
+  const [step, setStep] = useState(1); // 1: Email, 2: Check Email Message, 3: New Password, 4: Success
   const [error, setError] = useState<string | null>(null);
-  const [isResending, setIsResending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const { sendResetCode, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  const handleSendCode = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Detectar si el usuario ha llegado aquí a través de un enlace de recuperación
+    // Supabase añade parámetros en el hash de la URL cuando se hace clic en el correo
+    const handleRecovery = async () => {
+      const hash = window.location.hash;
+      if (hash && (hash.includes('type=recovery') || hash.includes('access_token'))) {
+        setStep(3);
+      }
+    };
+
+    handleRecovery();
+
+    // También escuchamos cambios de estado de auth por si acaso
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setStep(3);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -32,64 +52,42 @@ const ForgotPassword = () => {
       return;
     }
 
-    const result = sendResetCode(email);
-    
-    if (result.success) {
-      setGeneratedCode(result.code || '');
-      setStep(2);
-      showSuccess("Verification code sent to your email!");
-      // Note: In a real production app, the code is sent via SMTP.
-      // For testing purposes, the code is logged to the browser console.
-      console.log(`[SECURITY] Reset code for ${email}: ${result.code}`);
-    } else {
-      setError(result.message);
-      showError(result.message);
-    }
-  };
-
-  const handleResendCode = () => {
-    setIsResending(true);
-    const result = sendResetCode(email);
-    setTimeout(() => {
+    setIsLoading(true);
+    try {
+      const result = await sendResetCode(email);
       if (result.success) {
-        setGeneratedCode(result.code || '');
-        showSuccess("New code sent!");
-        console.log(`[SECURITY] New reset code for ${email}: ${result.code}`);
+        setStep(2);
+        showSuccess("Recovery link sent to your email!");
+      } else {
+        setError(result.message);
+        showError(result.message);
       }
-      setIsResending(false);
-    }, 1000);
-  };
-
-  const handleVerifyCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (code === generatedCode) {
-      setStep(3);
-      showSuccess("Identity verified!");
-    } else {
-      setError("Invalid verification code");
-      showError("Invalid verification code");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!newPassword) {
-      setError("Please enter a new password");
+    if (!newPassword || newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
 
-    const result = resetPassword(email, newPassword);
-    
-    if (result.success) {
-      setStep(4);
-      showSuccess("Password updated successfully!");
-    } else {
-      setError(result.message);
-      showError(result.message);
+    setIsLoading(true);
+    try {
+      const result = await resetPassword(newPassword);
+      if (result.success) {
+        setStep(4);
+        showSuccess("Password updated successfully!");
+      } else {
+        setError(result.message);
+        showError(result.message);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,8 +109,8 @@ const ForgotPassword = () => {
             <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">RECOVER ACCESS</h1>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">
-              {step === 1 && "Enter your email to receive a code"}
-              {step === 2 && "Enter the 6-digit verification code"}
+              {step === 1 && "Enter your email to receive a recovery link"}
+              {step === 2 && "Check your inbox for the recovery link"}
               {step === 3 && "Set your new account password"}
               {step === 4 && "Account recovered successfully"}
             </p>
@@ -126,7 +124,7 @@ const ForgotPassword = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-8" 
-                onSubmit={handleSendCode}
+                onSubmit={handleSendLink}
               >
                 {error && (
                   <div className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest">
@@ -147,57 +145,33 @@ const ForgotPassword = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-                  SEND RESET CODE <Mail className="ml-3 h-4 w-4" />
+                <Button type="submit" disabled={isLoading} className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+                  {isLoading ? "SENDING..." : "SEND RECOVERY LINK"} <Mail className="ml-3 h-4 w-4" />
                 </Button>
               </motion.form>
             )}
 
             {step === 2 && (
-              <motion.form 
+              <motion.div 
                 key="step2"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-8" 
-                onSubmit={handleVerifyCode}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-8"
               >
-                {error && (
-                  <div className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <Label htmlFor="code" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Verification Code</Label>
-                  <Input 
-                    id="code" 
-                    type="text" 
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="000000" 
-                    maxLength={6}
-                    className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50 text-center text-2xl tracking-[0.5em] font-black"
-                  />
+                <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto border border-red-600/20">
+                  <Mail className="w-10 h-10 text-red-600" />
                 </div>
-                
-                <div className="space-y-4">
-                  <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-                    VERIFY CODE <ShieldCheck className="ml-3 h-4 w-4" />
-                  </Button>
-                  
-                  <button 
-                    type="button"
-                    onClick={handleResendCode}
-                    disabled={isResending}
-                    className="w-full flex items-center justify-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest hover:text-white transition-colors disabled:opacity-50"
-                  >
-                    <RefreshCw className={cn("h-3 w-3", isResending && "animate-spin")} /> 
-                    {isResending ? "Resending..." : "Resend Code"}
-                  </button>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Check your email</h3>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">We've sent a recovery link to {email}.</p>
                 </div>
-              </motion.form>
+                <Button 
+                  onClick={() => setStep(1)}
+                  className="w-full bg-white/5 border border-white/10 text-white font-black h-14 rounded-2xl uppercase tracking-widest text-xs"
+                >
+                  Try another email
+                </Button>
+              </motion.div>
             )}
 
             {step === 3 && (
@@ -209,6 +183,13 @@ const ForgotPassword = () => {
                 className="space-y-8" 
                 onSubmit={handleUpdatePassword}
               >
+                {error && (
+                  <div className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <Label htmlFor="newPassword" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">New Password</Label>
                   <Input 
@@ -221,8 +202,8 @@ const ForgotPassword = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
-                  UPDATE PASSWORD <KeyRound className="ml-3 h-4 w-4" />
+                <Button type="submit" disabled={isLoading} className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+                  {isLoading ? "UPDATING..." : "UPDATE PASSWORD"} <KeyRound className="ml-3 h-4 w-4" />
                 </Button>
               </motion.form>
             )}
