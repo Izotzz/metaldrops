@@ -43,6 +43,7 @@ const Navbar = () => {
     { name: 'Tools', path: '/products' },
     { name: 'Daily', path: '/daily' },
     { name: 'Pastes', path: '/pastes' },
+    { name: 'Free Games', path: '/free-games' },
   ];
 
   const handleLogout = async () => {
