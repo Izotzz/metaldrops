@@ -64,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
           role: 'user'
         });
-        // Refresh count after new profile creation
         fetchUserCount();
       }
     } catch (e) {
@@ -110,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await ensureProfileExists(session.user);
         await fetchProfile(session.user.id);
       } else {
-        // If no session, clear all user-related state
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -160,15 +158,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // 1. Sign out from Supabase
       await supabase.auth.signOut();
-      // Manually clear state to ensure immediate UI update
+      
+      // 2. Clear all local storage (this wipes cookies/tokens stored by Supabase)
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // 3. Clear local state
       setUser(null);
       setUsername(null);
       setRole(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
+      
+      // 4. Force a hard reload to ensure all memory/cookies are cleared
+      window.location.href = '/';
     } catch (error) {
       console.error("Error during logout:", error);
+      // Fallback: force reload anyway
+      window.location.href = '/';
     }
   };
 
