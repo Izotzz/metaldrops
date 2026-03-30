@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, ArrowLeft, AlertCircle } from 'lucide-react';
+import { LogIn, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,15 +14,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, isLoggedIn } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, isLoggedIn, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && !isLoading) {
       navigate('/');
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +33,7 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       const result = await login(email, password);
       
@@ -45,9 +45,17 @@ const Login = () => {
         showError(result.message);
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-black">
@@ -113,10 +121,10 @@ const Login = () => {
             
             <Button 
               type="submit" 
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
             >
-              {isLoading ? "SIGNING IN..." : "SIGN IN"} <LogIn className="ml-3 h-4 w-4" />
+              {isSubmitting ? "SIGNING IN..." : "SIGN IN"} <LogIn className="ml-3 h-4 w-4" />
             </Button>
           </form>
           

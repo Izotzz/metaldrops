@@ -6,6 +6,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  isLoading: boolean;
   username: string | null;
   role: string | null;
   userCount: number;
@@ -27,6 +28,7 @@ const BASE_MEMBERS = 7;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [dbCount, setDbCount] = useState(0);
@@ -92,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
+      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
@@ -99,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await fetchProfile(session.user.id);
       }
       fetchUserCount();
+      setIsLoading(false);
     };
 
     initAuth();
@@ -115,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
+      setIsLoading(false);
       fetchUserCount();
     });
 
@@ -122,17 +127,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, message: error.message };
+    if (error) {
+      setIsLoading(false);
+      return { success: false, message: error.message };
+    }
     if (data.user) {
       await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
+      setIsLoading(false);
       return { success: true, message: username || data.user.email || 'User' };
     }
+    setIsLoading(false);
     return { success: false, message: "Login failed" };
   };
 
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
+    setIsLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -142,41 +154,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    if (error) return { success: false, message: error.message };
+    if (error) {
+      setIsLoading(false);
+      return { success: false, message: error.message };
+    }
     
     if (data.user) {
       if (!data.session) {
+        setIsLoading(false);
         return { success: true, message: "Please check your email to confirm your account." };
       }
       setUser(data.user);
       await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
+      setIsLoading(false);
       return { success: true, message: "Registration successful" };
     }
+    setIsLoading(false);
     return { success: false, message: "Registration failed" };
   };
 
   const logout = async () => {
     try {
-      // 1. Sign out from Supabase
       await supabase.auth.signOut();
-      
-      // 2. Clear all local storage (this wipes cookies/tokens stored by Supabase)
       localStorage.clear();
       sessionStorage.clear();
-      
-      // 3. Clear local state
       setUser(null);
       setUsername(null);
       setRole(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
-      
-      // 4. Force a hard reload to ensure all memory/cookies are cleared
       window.location.href = '/';
     } catch (error) {
       console.error("Error during logout:", error);
-      // Fallback: force reload anyway
       window.location.href = '/';
     }
   };
@@ -220,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{ 
       isLoggedIn: !!user, 
+      isLoading,
       username, 
       role,
       userCount, 
