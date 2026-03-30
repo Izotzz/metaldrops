@@ -31,50 +31,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
   const fetchUserCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (!error && count !== null) {
-        setUserCount(count);
-      }
-    } catch (err) {
-      console.error("Error fetching user count:", err);
-    }
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) throw error;
+    if (count !== null) setUserCount(count);
   };
 
   const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, role, bought_product_ids, last_claimed_at')
-        .eq('id', userId)
-        .maybeSingle();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username, role, bought_product_ids, last_claimed_at')
+      .eq('id', userId)
+      .maybeSingle();
 
-      if (data && !error) {
-        setUsername(data.username);
-        setRole(data.role || 'user');
-        setBoughtProductIds(data.bought_product_ids || []);
-        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
-      } else if (error) {
-        console.error("Error fetching profile:", error);
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
+    if (error) throw error;
+    
+    if (data) {
+      setUsername(data.username);
+      setRole(data.role || 'user');
+      setBoughtProductIds(data.bought_product_ids || []);
+      setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
     }
   };
 
   useEffect(() => {
     const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
-        }
-      } catch (err) {
-        console.error("Auth initialization error:", err);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
       }
     };
 
@@ -162,14 +149,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
     const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
-    if (!error) setBoughtProductIds(newIds);
+    if (error) throw error;
+    setBoughtProductIds(newIds);
   };
 
   const claimDailyAccount = async () => {
     if (!user) return;
     const now = new Date().toISOString();
     const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
-    if (!error) setLastClaimedAt(new Date(now).getTime());
+    if (error) throw error;
+    setLastClaimedAt(new Date(now).getTime());
   };
 
   const sendResetCode = async (email: string) => {
