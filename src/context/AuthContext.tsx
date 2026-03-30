@@ -57,6 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      } else if (error) {
+        console.error("Error fetching profile:", error);
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -65,10 +67,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error("Auth initialization error:", err);
       }
     };
 
@@ -93,13 +99,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     fetchUserCount();
 
-    // Real-time subscription for user count updates
     const channel = supabase
       .channel('public:profiles')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
-        fetchUserCount();
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
         fetchUserCount();
       })
       .subscribe();
