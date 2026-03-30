@@ -23,20 +23,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Starting from 7 members as requested
+// Initialize from localStorage to persist across reloads
+const storedUsername = localStorage.getItem('username') as string | null;
+const [username, setUsername] = useState<string | null>(storedUsername);
+const [role, setRole] = useState<string | null>(null);
+const [dbCount, setDbCount] = useState(0);
+const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
+const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
+const [isLoading, setIsLoading] = useState(true);
+
 const BASE_MEMBERS = 7;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [username, setUsername] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [dbCount, setDbCount] = useState(0);
-  const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
-  const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
-
-  // Total count is the base plus any new registrations found in the database
-  const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
     try {
@@ -86,6 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+        
+        // Persist username for reloads        if (data.username) {
+          localStorage.setItem('username', data.username);
+        }
       }
     } catch (e) {
       setUsername(user?.user_metadata?.username || user?.email?.split('@')[0] || 'User');
@@ -119,8 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
-      setIsLoading(false);
       fetchUserCount();
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -158,8 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       return { success: false, message: error.message };
     }
-    
-    if (data.user) {
+        if (data.user) {
       if (!data.session) {
         setIsLoading(false);
         return { success: true, message: "Please check your email to confirm your account." };
@@ -243,8 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       boughtProductIds, 
       lastClaimedAt,
       login, 
-      register, 
-      logout, 
+      register,       logout, 
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,
