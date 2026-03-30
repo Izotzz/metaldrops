@@ -31,28 +31,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
   const fetchUserCount = async () => {
-    const { count, error } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-    
-    if (error) throw error;
-    if (count !== null) setUserCount(count);
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setUserCount(count);
+      }
+    } catch (e) {
+      console.error("Failed to fetch user count", e);
+    }
+  };
+
+  const ensureProfileExists = async (supabaseUser: SupabaseUser) => {
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('profiles').insert({
+          id: supabaseUser.id,
+          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
+          role: 'user'
+        });
+      }
+    } catch (e) {
+      console.error("Failed to ensure profile exists", e);
+    }
   };
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username, role, bought_product_ids, last_claimed_at')
-      .eq('id', userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, role, bought_product_ids, last_claimed_at')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (error) throw error;
-    
-    if (data) {
-      setUsername(data.username);
-      setRole(data.role || 'user');
-      setBoughtProductIds(data.bought_product_ids || []);
-      setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      if (data && !error) {
+        setUsername(data.username);
+        setRole(data.role || 'user');
+        setBoughtProductIds(data.bought_product_ids || []);
+        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      }
+    } catch (e) {
+      console.error("Failed to fetch profile", e);
     }
   };
 
@@ -61,8 +88,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
+        await ensureProfileExists(session.user);
         await fetchProfile(session.user.id);
       }
+      fetchUserCount();
     };
 
     initAuth();
@@ -70,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
+        await ensureProfileExists(session.user);
         await fetchProfile(session.user.id);
       } else {
         setUser(null);
@@ -78,47 +108,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
-      
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
-        fetchUserCount();
-      }
+      fetchUserCount();
     });
 
-    fetchUserCount();
-
-    const channel = supabase
-      .channel('public:profiles')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-        fetchUserCount();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-      supabase.removeChannel(channel);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { success: false, message: error.message };
     if (data.user) {
+      await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
       return { success: true, message: username || data.user.email || 'User' };
     }
     return { success: false, message: "Login failed" };
   };
 
-  const register = async ({ username, email, password }: { username: string; email: string; password: string }) => {
+  const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { username },
+        data: { username: regUsername },
         emailRedirectTo: window.location.origin,
       }
     });
@@ -130,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, message: "Please check your email to confirm your account." };
       }
       setUser(data.user);
+      await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
       return { success: true, message: "Registration successful" };
     }
@@ -138,27 +151,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setUsername(null);
-    setRole(null);
-    setBoughtProductIds([]);
-    setLastClaimedAt(null);
   };
 
   const addBoughtProducts = async (ids: number[]) => {
     if (!user) return;
     const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
     const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
-    if (error) throw error;
-    setBoughtProductIds(newIds);
+    if (!error) setBoughtProductIds(newIds);
   };
 
   const claimDailyAccount = async () => {
     if (!user) return;
     const now = new Date().toISOString();
     const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
-    if (error) throw error;
-    setLastClaimedAt(new Date(now).getTime());
+    if (!error) setLastClaimedAt(new Date(now).getTime());
   };
 
   const sendResetCode = async (email: string) => {
