@@ -23,8 +23,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initialize from localStorage to persist across reloads
-const storedUsername = localStorage.getItem('username') as string | null;
+// Initialize from localStorage to persist across reloadsconst storedUsername = localStorage.getItem('username') as string | null;
 const [username, setUsername] = useState<string | null>(storedUsername);
 const [role, setRole] = useState<string | null>(null);
 const [dbCount, setDbCount] = useState(0);
@@ -190,8 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBoughtProductIds([]);
       setLastClaimedAt(null);
 
-      // 3. Attempt to sign out from Supabase
-      await supabase.auth.signOut();
+      // 3. Attempt to sign out from Supabase      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error during logout:", error);
     } finally {
@@ -251,8 +249,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,
-      resetPassword
-    }}>
+      resetPassword    }}>
       {children}
     </AuthContext.Provider>
   );
