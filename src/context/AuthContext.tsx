@@ -23,8 +23,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initialize from localStorage to persist across reloads
-const storedUsername = localStorage.getItem('username') as string | null;
+// Initialize from localStorage to persist across reloadsconst storedUsername = localStorage.getItem('username') as string | null;
 const [username, setUsername] = useState<string | null>(storedUsername);
 const [role, setRole] = useState<string | null>(null);
 const [dbCount, setDbCount] = useState(0);
@@ -86,7 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
         
-        // Persist username for reloads        if (data.username) {
+        // Persist username for reloads
+        if (data.username) {
           localStorage.setItem('username', data.username);
         }
       }
