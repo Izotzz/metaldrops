@@ -10,15 +10,13 @@ import { useAuth } from '@/context/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isDisposableEmail } from '@/utils/email';
-import Turnstile from "react-turnstile";
-
-const TURNSTILE_SITE_KEY = "0x4AAAAAACw4NRWjheTVNzEB";
+import SecurityCaptcha from '@/components/SecurityCaptcha';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { register, isLoggedIn } = useAuth();
@@ -44,16 +42,17 @@ const Register = () => {
       return;
     }
 
-    if (!captchaToken) {
+    if (!isVerified) {
       setError("Please complete the security verification.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const result = await register({         username, 
-        email,         password, 
-        captchaToken 
+      const result = await register({ 
+        username, 
+        email, 
+        password 
       });
       
       if (result.success) {
@@ -78,7 +77,8 @@ const Register = () => {
       
       <div className="w-full max-w-md relative z-10">
         <Link to="/" className="inline-flex items-center gap-3 text-gray-500 hover:text-white mb-10 transition-colors font-black uppercase tracking-widest text-[10px]">
-          <ArrowLeft className="h-4 w-4 text-red-600" /> Back to home        </Link>
+          <ArrowLeft className="h-4 w-4 text-red-600" /> Back to home
+        </Link>
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -141,12 +141,8 @@ const Register = () => {
               />
             </div>
 
-            <div className="flex justify-center py-2">
-              <Turnstile
-                sitekey={TURNSTILE_SITE_KEY}
-                onVerify={(token) => setCaptchaToken(token)}
-                theme="dark"
-              />
+            <div className="py-2">
+              <SecurityCaptcha onVerify={(valid) => setIsVerified(valid)} />
             </div>
 
             <div className="flex items-center gap-2 py-2">
@@ -162,7 +158,8 @@ const Register = () => {
               {isLoading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"} <UserPlus className="ml-3 h-4 w-4" />
             </Button>
           </form>
-                    <div className="mt-10 text-center text-[10px] font-black uppercase tracking-widest">
+          
+          <div className="mt-10 text-center text-[10px] font-black uppercase tracking-widest">
             <span className="text-gray-500">Already have an account? </span>
             <Link to="/login" className="text-red-600 hover:underline">Sign in</Link>
           </div>
