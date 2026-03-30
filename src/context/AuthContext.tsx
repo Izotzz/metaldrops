@@ -176,17 +176,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // 1. Clear all local storage and session data first
       localStorage.clear();
       sessionStorage.clear();
+      
+      // 2. Clear local state
       setUser(null);
       setUsername(null);
       setRole(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
-      window.location.href = '/';
+      
+      // 3. Attempt to sign out from Supabase
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error during logout:", error);
+    } finally {
+      // 4. Always force a hard reload to ensure all memory/cookies are cleared
       window.location.href = '/';
     }
   };
