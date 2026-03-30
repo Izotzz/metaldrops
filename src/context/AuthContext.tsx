@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { showSuccess } from '@/utils/toast';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -31,6 +30,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
+  const fetchUserCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setUserCount(count);
+      }
+    } catch (err) {
+      console.error("Error fetching user count:", err);
+    }
+  };
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, role, bought_product_ids, last_claimed_at')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (data && !error) {
+        setUsername(data.username);
+        setRole(data.role || 'user');
+        setBoughtProductIds(data.bought_product_ids || []);
+        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -54,48 +86,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLastClaimedAt(null);
       }
       
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
         fetchUserCount();
       }
     });
 
     fetchUserCount();
 
-    return () => subscription.unsubscribe();
+    // Real-time subscription for user count updates
+    const channel = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
+        fetchUserCount();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' }, () => {
+        fetchUserCount();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
   }, []);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, role, bought_product_ids, last_claimed_at')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (data && !error) {
-        setUsername(data.username);
-        setRole(data.role || 'user');
-        setBoughtProductIds(data.bought_product_ids || []);
-        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-    }
-  };
-
-  const fetchUserCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (!error && count !== null) {
-        setUserCount(count);
-      }
-    } catch (err) {
-      console.error("Error fetching user count:", err);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -111,14 +124,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, message: "Login failed" };
   };
 
-  const register = async ({ username, email, password, captchaToken }: { username: string; email: string; password: string; captchaToken?: string }) => {
+  const register = async ({ username, email, password }: { username: string; email: string; password: string }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { username },
         emailRedirectTo: window.location.origin,
-        captchaToken: captchaToken // Enviamos el token de Turnstile aquí
       }
     });
 
