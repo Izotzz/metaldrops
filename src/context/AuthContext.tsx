@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         await ensureProfileExists(session.user);
         await fetchProfile(session.user.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -158,7 +158,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      // Manually clear state to ensure immediate UI update
+      setUser(null);
+      setUsername(null);
+      setRole(null);
+      setBoughtProductIds([]);
+      setLastClaimedAt(null);
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
 
   const addBoughtProducts = async (ids: number[]) => {
