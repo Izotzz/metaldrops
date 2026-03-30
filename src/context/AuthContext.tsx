@@ -23,7 +23,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initialize from localStorage to persist across reloadsconst storedUsername = localStorage.getItem('username') as string | null;
+// Initialize from localStorage to persist across reloads
+const storedUsername = localStorage.getItem('username') as string | null;
 const [username, setUsername] = useState<string | null>(storedUsername);
 const [role, setRole] = useState<string | null>(null);
 const [dbCount, setDbCount] = useState(0);
@@ -41,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
-      
+
       if (!error && count !== null) {
         setDbCount(count);
       }
@@ -84,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
-        
+
         // Persist username for reloads
         if (data.username) {
           localStorage.setItem('username', data.username);
@@ -161,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       return { success: false, message: error.message };
     }
-        if (data.user) {
+    if (data.user) {
       if (!data.session) {
         setIsLoading(false);
         return { success: true, message: "Please check your email to confirm your account." };
@@ -181,14 +182,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 1. Clear all local storage and session data first
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // 2. Clear local state
       setUser(null);
       setUsername(null);
       setRole(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
-      
+
       // 3. Attempt to sign out from Supabase
       await supabase.auth.signOut();
     } catch (error) {
@@ -236,16 +237,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      isLoggedIn: !!user, 
+    <AuthContext.Provider value={{
+      isLoggedIn: !!user,
       isLoading,
-      username, 
+      username,
       role,
-      userCount, 
-      boughtProductIds, 
+      userCount,
+      boughtProductIds,
       lastClaimedAt,
-      login, 
-      register,       logout, 
+      login,
+      register,
+      logout,
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,
