@@ -22,23 +22,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Base number to make the community look established
-const BASE_MEMBERS = 1420;
+// Starting from 7 members as requested
+const BASE_MEMBERS = 7;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [dbCount, setDbCount] = useState(0);
-  const [simulatedIncrement, setSimulatedIncrement] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
 
-  const userCount = BASE_MEMBERS + dbCount + simulatedIncrement;
+  // Total count is the base plus any new registrations found in the database
+  const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
     try {
-      // We try to get the count from profiles, but we don't fail if it doesn't exist
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
@@ -47,8 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDbCount(count);
       }
     } catch (e) {
-      // If SQL fails, we just keep dbCount at 0 and rely on BASE + Simulated
-      console.log("Database count unavailable, using simulated stats.");
+      console.log("Database count unavailable, using base stats.");
     }
   };
 
@@ -66,9 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
           role: 'user'
         });
+        // Refresh count after new profile creation
+        fetchUserCount();
       }
     } catch (e) {
-      // Silent fail for profile creation if table doesn't exist
+      // Silent fail
     }
   };
 
@@ -87,7 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
       }
     } catch (e) {
-      // Fallback for UI if profile fetch fails
       setUsername(user?.user_metadata?.username || user?.email?.split('@')[0] || 'User');
     }
   };
@@ -105,11 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    // Simulated "Live" growth ticker
-    const tickerInterval = setInterval(() => {
-      setSimulatedIncrement(prev => prev + (Math.random() > 0.7 ? 1 : 0));
-    }, 30000); // Check for "new members" every 30 seconds
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -125,10 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fetchUserCount();
     });
 
-    return () => {
-      subscription.unsubscribe();
-      clearInterval(tickerInterval);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -177,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
       if (!error) setBoughtProductIds(newIds);
     } catch (e) {
-      setBoughtProductIds(newIds); // Optimistic update if DB fails
+      setBoughtProductIds(newIds);
     }
   };
 
@@ -188,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
       if (!error) setLastClaimedAt(new Date(now).getTime());
     } catch (e) {
-      setLastClaimedAt(new Date(now).getTime()); // Optimistic update
+      setLastClaimedAt(new Date(now).getTime());
     }
   };
 
