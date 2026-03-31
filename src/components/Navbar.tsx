@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
@@ -103,7 +103,7 @@ const Navbar = () => {
               {item.name}
             </Link>
           ))}
-          {isLoggedIn && !isLoading && (
+          {isLoggedIn && (
             <Link
               to="/my-products"
               className={cn(
@@ -127,7 +127,11 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           <CartSheet />
           
-          {!isLoading && (
+          {isLoading ? (
+            <div className="w-10 h-10 flex items-center justify-center">
+              <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
+            </div>
+          ) : (
             isLoggedIn ? (
               <>
                 <Button 
@@ -143,7 +147,9 @@ const Navbar = () => {
                   <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center">
                     <User className="h-3.5 w-3.5 text-red-500" />
                   </div>
-                  <span className="text-xs font-black text-gray-300 uppercase tracking-tighter">{username}</span>
+                  <span className="text-xs font-black text-gray-300 uppercase tracking-tighter">
+                    {username || "User"}
+                  </span>
                 </div>
                 
                 <Button 

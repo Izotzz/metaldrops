@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isInitialized = useRef(false);
 
   const BASE_MEMBERS = 7;
   const userCount = BASE_MEMBERS + dbCount;
@@ -101,41 +102,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout to ensure loading state doesn't hang
-    const safetyTimer = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.warn("[Auth] Safety timeout reached, forcing loading to false");
-        setIsLoading(false);
-      }
-    }, 3000);
-
-    const initAuth = async () => {
+    const initializeAuth = async () => {
+      if (isInitialized.current) return;
+      
       try {
-        // Get session immediately
-        const { data: { session } } = await supabase.auth.getSession();
+        // 1. Get the current session immediately
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (sessionError) throw sessionError;
 
-        if (session?.user) {
-          setUser(session.user);
-          // Fetch profile in background, don't block the initial render
-          fetchProfile(session.user.id);
-          ensureProfileExists(session.user);
+        if (mounted) {
+          if (session?.user) {
+            console.log("[Auth] Session recovered:", session.user.id);
+            setUser(session.user);
+            // Fetch profile but don't let it block the main loading state if it's slow
+            fetchProfile(session.user.id);
+            ensureProfileExists(session.user);
+          } else {
+            console.log("[Auth] No active session found");
+            setUser(null);
+            setUsername(null);
+            localStorage.removeItem('username');
+          }
+          await fetchUserCount();
         }
-        
-        await fetchUserCount();
       } catch (error) {
-        console.error("[Auth] Initialization error:", error);
+        console.error("[Auth] Initialization failed:", error);
       } finally {
         if (mounted) {
           setIsLoading(false);
-          clearTimeout(safetyTimer);
+          isInitialized.current = true;
         }
       }
     };
 
-    initAuth();
+    initializeAuth();
 
+    // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
@@ -143,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        fetchProfile(session.user.id);
+        await fetchProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
@@ -159,7 +162,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      clearTimeout(safetyTimer);
     };
   }, []);
 
