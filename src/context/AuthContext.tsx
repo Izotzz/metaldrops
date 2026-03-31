@@ -97,7 +97,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let mounted = true;
 
     const initialize = async () => {
-      // 1. Get initial session
+      setIsLoading(true);
+      
+      // Get initial session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (mounted) {
@@ -105,6 +107,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session.user);
           await ensureProfileExists(session.user);
           await fetchProfile(session.user.id);
+        } else {
+          setUser(null);
+          setUsername(null);
+          setRole(null);
+          setBoughtProductIds([]);
+          setLastClaimedAt(null);
+          localStorage.removeItem('username');
         }
         await fetchUserCount();
         setIsLoading(false);
@@ -113,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initialize();
 
-    // 2. Listen for auth changes
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
@@ -129,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('username');
       }
       
+      // Only stop loading if we've handled the event
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         setIsLoading(false);
       }
@@ -141,18 +151,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, message: error.message };
+    if (error) {
+      setIsLoading(false);
+      return { success: false, message: error.message };
+    }
     
     if (data.user) {
       setUser(data.user);
       await fetchProfile(data.user.id);
+      setIsLoading(false);
       return { success: true, message: username || data.user.email || 'User' };
     }
+    setIsLoading(false);
     return { success: false, message: "Login failed" };
   };
 
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
+    setIsLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -162,17 +179,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    if (error) return { success: false, message: error.message };
+    if (error) {
+      setIsLoading(false);
+      return { success: false, message: error.message };
+    }
     
     if (data.user) {
       if (!data.session) {
+        setIsLoading(false);
         return { success: true, message: "Please check your email to confirm your account." };
       }
       setUser(data.user);
       await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
+      setIsLoading(false);
       return { success: true, message: "Registration successful" };
     }
+    setIsLoading(false);
     return { success: false, message: "Registration failed" };
   };
 
