@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDbCount(count);
       }
     } catch (e) {
-      console.log("[Auth] Database count unavailable.");
+      console.warn("[Auth] User count fetch failed");
     }
   };
 
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     } catch (e) {
-      console.error("[Auth] Error fetching profile:", e);
+      console.error("[Auth] Profile fetch error:", e);
     }
   };
 
@@ -89,56 +89,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await fetchUserCount();
       }
     } catch (e) {
-      console.error("[Auth] Error ensuring profile exists:", e);
+      console.error("[Auth] Profile creation error:", e);
     }
   };
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        // 1. Get the current session immediately
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
-
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            // Crucial: Wait for profile data before finishing loading
-            await ensureProfileExists(session.user);
-            await fetchProfile(session.user.id);
-          } else {
-            setUser(null);
-            setUsername(null);
-            setRole(null);
-            setBoughtProductIds([]);
-            setLastClaimedAt(null);
-            localStorage.removeItem('username');
-          }
-          
-          await fetchUserCount();
-        }
-      } catch (error) {
-        console.error("[Auth] Initialization error:", error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    // Listen for auth state changes (login, logout, etc.)
+    // 1. Set up the auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+
+      console.log(`[Auth] State Change: ${event}`, session?.user?.id);
 
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
+      } else {
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -147,9 +114,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('username');
       }
       
-      // Ensure loading is false after any auth event
+      // Only stop loading once we've processed the initial session or a sign-in/out
       setIsLoading(false);
     });
+
+    // 2. Manually check for an existing session to handle the initial load
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        if (session?.user) {
+          setUser(session.user);
+          await ensureProfileExists(session.user);
+          await fetchProfile(session.user.id);
+        }
+        await fetchUserCount();
+      } catch (error) {
+        console.error("[Auth] Initial session check failed:", error);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    checkInitialSession();
 
     return () => {
       mounted = false;
