@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDbCount(count);
       }
     } catch (e) {
-      console.log("Database count unavailable.");
+      console.log("[Auth] Database count unavailable.");
     }
   };
 
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     } catch (e) {
-      console.error("Error fetching profile:", e);
+      console.error("[Auth] Error fetching profile:", e);
     }
   };
 
@@ -86,50 +86,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
           role: 'user'
         });
-        fetchUserCount();
+        await fetchUserCount();
       }
     } catch (e) {
-      // Silent fail
+      console.error("[Auth] Error ensuring profile exists:", e);
     }
   };
 
   useEffect(() => {
     let mounted = true;
 
-    const initialize = async () => {
-      setIsLoading(true);
-      
-      // Get initial session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (mounted) {
-        if (session?.user) {
-          setUser(session.user);
-          await ensureProfileExists(session.user);
-          await fetchProfile(session.user.id);
-        } else {
-          setUser(null);
-          setUsername(null);
-          setRole(null);
-          setBoughtProductIds([]);
-          setLastClaimedAt(null);
-          localStorage.removeItem('username');
+    const initializeAuth = async () => {
+      try {
+        // 1. Get the current session immediately
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            // Crucial: Wait for profile data before finishing loading
+            await ensureProfileExists(session.user);
+            await fetchProfile(session.user.id);
+          } else {
+            setUser(null);
+            setUsername(null);
+            setRole(null);
+            setBoughtProductIds([]);
+            setLastClaimedAt(null);
+            localStorage.removeItem('username');
+          }
+          
+          await fetchUserCount();
         }
-        await fetchUserCount();
-        setIsLoading(false);
+      } catch (error) {
+        console.error("[Auth] Initialization error:", error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    initialize();
+    initializeAuth();
 
-    // Listen for auth changes
+    // Listen for auth state changes (login, logout, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -138,10 +147,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('username');
       }
       
-      // Only stop loading if we've handled the event
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        setIsLoading(false);
-      }
+      // Ensure loading is false after any auth event
+      setIsLoading(false);
     });
 
     return () => {
@@ -152,55 +159,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      
+      if (data.user) {
+        setUser(data.user);
+        await fetchProfile(data.user.id);
+        return { success: true, message: username || data.user.email || 'User' };
+      }
+      return { success: false, message: "Login failed" };
+    } catch (error: any) {
       return { success: false, message: error.message };
-    }
-    
-    if (data.user) {
-      setUser(data.user);
-      await fetchProfile(data.user.id);
+    } finally {
       setIsLoading(false);
-      return { success: true, message: username || data.user.email || 'User' };
     }
-    setIsLoading(false);
-    return { success: false, message: "Login failed" };
   };
 
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username: regUsername },
-        emailRedirectTo: window.location.origin,
-      }
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username: regUsername },
+          emailRedirectTo: window.location.origin,
+        }
+      });
 
-    if (error) {
-      setIsLoading(false);
-      return { success: false, message: error.message };
-    }
-    
-    if (data.user) {
-      if (!data.session) {
-        setIsLoading(false);
-        return { success: true, message: "Please check your email to confirm your account." };
+      if (error) throw error;
+      
+      if (data.user) {
+        if (!data.session) {
+          return { success: true, message: "Please check your email to confirm your account." };
+        }
+        setUser(data.user);
+        await ensureProfileExists(data.user);
+        await fetchProfile(data.user.id);
+        return { success: true, message: "Registration successful" };
       }
-      setUser(data.user);
-      await ensureProfileExists(data.user);
-      await fetchProfile(data.user.id);
+      return { success: false, message: "Registration failed" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    } finally {
       setIsLoading(false);
-      return { success: true, message: "Registration successful" };
     }
-    setIsLoading(false);
-    return { success: false, message: "Registration failed" };
   };
 
   const logout = async () => {
     try {
+      setIsLoading(true);
       await supabase.auth.signOut();
       localStorage.clear();
       sessionStorage.clear();
@@ -210,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBoughtProductIds([]);
       setLastClaimedAt(null);
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("[Auth] Logout error:", error);
     } finally {
       window.location.href = '/';
     }
@@ -223,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
       if (!error) setBoughtProductIds(newIds);
     } catch (e) {
-      console.error("Update error:", e);
+      console.error("[Auth] Update error:", e);
     }
   };
 
@@ -234,7 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
       if (!error) setLastClaimedAt(new Date(now).getTime());
     } catch (e) {
-      console.error("Claim error:", e);
+      console.error("[Auth] Claim error:", e);
     }
   };
 
