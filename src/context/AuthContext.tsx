@@ -24,17 +24,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Recuperación inmediata y síncrona del estado desde localStorage
+  // Recuperación síncrona inmediata para evitar parpadeos
   const getInitialUser = () => {
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser) as SupabaseUser;
-      } catch (e) {
-        return null;
-      }
+    try {
+      const savedUser = localStorage.getItem('auth_user');
+      return savedUser ? JSON.parse(savedUser) as SupabaseUser : null;
+    } catch {
+      return null;
     }
-    return null;
   };
 
   const [user, setUser] = useState<SupabaseUser | null>(getInitialUser);
@@ -54,10 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
-
-      if (!error && count !== null) {
-        setDbCount(count);
-      }
+      if (!error && count !== null) setDbCount(count);
     } catch (e) {
       console.warn("[Auth] User count fetch failed");
     }
@@ -71,18 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error("[Auth] Profile fetch error:", error);
-        return;
-      }
-
-      if (data) {
+      if (!error && data) {
         setUsername(data.username);
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
 
-        // Persistir datos adicionales
         if (data.username) localStorage.setItem('username', data.username);
         if (data.role) localStorage.setItem('user_role', data.role);
       }
@@ -105,50 +93,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
           role: 'user'
         });
-        await fetchUserCount();
+        fetchUserCount();
       }
     } catch (e) {
       console.error("[Auth] Profile creation error:", e);
     }
   };
 
-  // Hook de inicialización que se ejecuta al montar
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       if (isInitialized.current) return;
+      isInitialized.current = true;
       
       try {
-        // Verificar sesión real con Supabase
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
-
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
             localStorage.setItem('auth_user', JSON.stringify(session.user));
-            await fetchProfile(session.user.id);
+            // Tareas secundarias no bloqueantes
+            fetchProfile(session.user.id);
             ensureProfileExists(session.user);
           } else {
-            // Si no hay sesión real, limpiar localStorage
             setUser(null);
-            setUsername(null);
-            setRole(null);
             localStorage.removeItem('auth_user');
             localStorage.removeItem('username');
             localStorage.removeItem('user_role');
           }
-          await fetchUserCount();
+          fetchUserCount();
         }
       } catch (error) {
         console.error("[Auth] Initialization failed:", error);
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-          isInitialized.current = true;
-        }
+        if (mounted) setIsLoading(false);
       }
     };
 
@@ -160,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         localStorage.setItem('auth_user', JSON.stringify(session.user));
-        await fetchProfile(session.user.id);
+        fetchProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
@@ -189,7 +169,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data.user) {
         setUser(data.user);
-        // Guardar inmediatamente en localStorage tras login exitoso
         localStorage.setItem('auth_user', JSON.stringify(data.user));
         await fetchProfile(data.user.id);
         return { success: true, message: username || data.user.email || 'User' };
@@ -238,7 +217,247 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      // Limpiar todo rastro de persistencia
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('username');
+      localStorage.removeItem('user_role');
+      setUser(null);
+      setUsername(null);
+      setRole(null);
+      setBoughtProductIds([]);
+      setLastClaimedAt(null);
+    } catch (error) {
+      console.error("[Auth] Logout error:", error);
+    } finally {
+      window.location.href = '/';
+    }
+  };
+
+  const addBoughtProducts = async (ids: number[]) => {
+    if (!user) return;
+    const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
+    try {
+      const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
+      if (!error) setBoughtProductIds(newIds);
+    <dyad-write path="src/context/AuthContext.tsx" description="Completing the AuthProvider with full persistence and fixing the infinite loading loop.">
+"use client";
+
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
+interface AuthContextType {
+  isLoggedIn: boolean;
+  isLoading: boolean;
+  username: string | null;
+  role: string | null;
+  userCount: number;
+  boughtProductIds: number[];
+  lastClaimedAt: number | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
+  logout: () => Promise<void>;
+  addBoughtProducts: (ids: number[]) => Promise<void>;
+  claimDailyAccount: () => Promise<void>;
+  sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (password: string) => Promise<{ success: boolean; message: string }>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Recuperación síncrona inmediata para evitar parpadeos
+  const getInitialUser = () => {
+    try {
+      const savedUser = localStorage.getItem('auth_user');
+      return savedUser ? JSON.parse(savedUser) as SupabaseUser : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [user, setUser] = useState<SupabaseUser | null>(getInitialUser);
+  const [username, setUsername] = useState<string | null>(localStorage.getItem('username'));
+  const [role, setRole] = useState<string | null>(localStorage.getItem('user_role'));
+  const [dbCount, setDbCount] = useState(0);
+  const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
+  const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialized = useRef(false);
+
+  const BASE_MEMBERS = 7;
+  const userCount = BASE_MEMBERS + dbCount;
+
+  const fetchUserCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      if (!error && count !== null) setDbCount(count);
+    } catch (e) {
+      console.warn("[Auth] User count fetch failed");
+    }
+  };
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, role, bought_product_ids, last_claimed_at')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        setUsername(data.username);
+        setRole(data.role || 'user');
+        setBoughtProductIds(data.bought_product_ids || []);
+        setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+
+        if (data.username) localStorage.setItem('username', data.username);
+        if (data.role) localStorage.setItem('user_role', data.role);
+      }
+    } catch (e) {
+      console.error("[Auth] Profile fetch exception:", e);
+    }
+  };
+
+  const ensureProfileExists = async (supabaseUser: SupabaseUser) => {
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('profiles').insert({
+          id: supabaseUser.id,
+          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
+          role: 'user'
+        });
+        fetchUserCount();
+      }
+    } catch (e) {
+      console.error("[Auth] Profile creation error:", e);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      if (isInitialized.current) return;
+      isInitialized.current = true;
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            localStorage.setItem('auth_user', JSON.stringify(session.user));
+            // Tareas secundarias no bloqueantes
+            fetchProfile(session.user.id);
+            ensureProfileExists(session.user);
+          } else {
+            setUser(null);
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('username');
+            localStorage.removeItem('user_role');
+          }
+          fetchUserCount();
+        }
+      } catch (error) {
+        console.error("[Auth] Initialization failed:", error);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      if (session?.user) {
+        setUser(session.user);
+        localStorage.setItem('auth_user', JSON.stringify(session.user));
+        fetchProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUsername(null);
+        setRole(null);
+        setBoughtProductIds([]);
+        setLastClaimedAt(null);
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('username');
+        localStorage.removeItem('user_role');
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        await fetchProfile(data.user.id);
+        return { success: true, message: username || data.user.email || 'User' };
+      }
+      return { success: false, message: "Login failed" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username: regUsername },
+          emailRedirectTo: window.location.origin,
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data.user) {
+        if (!data.session) {
+          return { success: true, message: "Please check your email to confirm your account." };
+        }
+        setUser(data.user);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        await ensureProfileExists(data.user);
+        await fetchProfile(data.user.id);
+        return { success: true, message: "Registration successful" };
+      }
+      return { success: false, message: "Registration failed" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      await supabase.auth.signOut();
       localStorage.removeItem('auth_user');
       localStorage.removeItem('username');
       localStorage.removeItem('user_role');
