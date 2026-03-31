@@ -45,28 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDbCount(count);
       }
     } catch (e) {
-      console.log("Database count unavailable, using base stats.");
-    }
-  };
-
-  const ensureProfileExists = async (supabaseUser: SupabaseUser) => {
-    try {
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', supabaseUser.id)
-        .maybeSingle();
-
-      if (!existing) {
-        await supabase.from('profiles').insert({
-          id: supabaseUser.id,
-          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
-          role: 'user'
-        });
-        fetchUserCount();
-      }
-    } catch (e) {
-      // Silent fail
+      console.log("Database count unavailable.");
     }
   };
 
@@ -93,44 +72,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const ensureProfileExists = async (supabaseUser: SupabaseUser) => {
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('profiles').insert({
+          id: supabaseUser.id,
+          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
+          role: 'user'
+        });
+        fetchUserCount();
+      }
+    } catch (e) {
+      // Silent fail
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            await ensureProfileExists(session.user);
-            await fetchProfile(session.user.id);
-          } else {
-            setUser(null);
-            setUsername(null);
-            localStorage.removeItem('username');
-          }
-          fetchUserCount();
+    const initialize = async () => {
+      // 1. Get initial session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (mounted) {
+        if (session?.user) {
+          setUser(session.user);
+          await ensureProfileExists(session.user);
+          await fetchProfile(session.user.id);
         }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        await fetchUserCount();
+        setIsLoading(false);
       }
     };
 
-    initAuth();
+    initialize();
 
+    // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
       if (session?.user) {
         setUser(session.user);
-        await ensureProfileExists(session.user);
         await fetchProfile(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
+      } else {
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -139,7 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('username');
       }
       
-      setIsLoading(false);
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        setIsLoading(false);
+      }
     });
 
     return () => {
@@ -150,12 +142,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      return { success: false, message: error.message };
-    }
+    if (error) return { success: false, message: error.message };
+    
     if (data.user) {
       setUser(data.user);
-      await ensureProfileExists(data.user);
       await fetchProfile(data.user.id);
       return { success: true, message: username || data.user.email || 'User' };
     }
@@ -172,9 +162,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    if (error) {
-      return { success: false, message: error.message };
-    }
+    if (error) return { success: false, message: error.message };
+    
     if (data.user) {
       if (!data.session) {
         return { success: true, message: "Please check your email to confirm your account." };
@@ -198,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBoughtProductIds([]);
       setLastClaimedAt(null);
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Logout error:", error);
     } finally {
       window.location.href = '/';
     }
@@ -211,7 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
       if (!error) setBoughtProductIds(newIds);
     } catch (e) {
-      setBoughtProductIds(newIds);
+      console.error("Update error:", e);
     }
   };
 
@@ -222,7 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
       if (!error) setLastClaimedAt(new Date(now).getTime());
     } catch (e) {
-      setLastClaimedAt(new Date(now).getTime());
+      console.error("Claim error:", e);
     }
   };
 
