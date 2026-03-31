@@ -23,18 +23,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initialize from localStorage to persist across reloadsconst storedUsername = localStorage.getItem('username') as string | null;
-const [username, setUsername] = useState<string | null>(storedUsername);
-const [role, setRole] = useState<string | null>(null);
-const [dbCount, setDbCount] = useState(0);
-const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
-const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
-const [isLoading, setIsLoading] = useState(true);
-
-const BASE_MEMBERS = 7;
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [username, setUsername] = useState<string | null>(localStorage.getItem('username'));
+  const [role, setRole] = useState<string | null>(null);
+  const [dbCount, setDbCount] = useState(0);
+  const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
+  const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const BASE_MEMBERS = 7;
+  const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
     try {
@@ -85,7 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
 
-        // Persist username for reloads
         if (data.username) {
           localStorage.setItem('username', data.username);
         }
@@ -121,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
+        localStorage.removeItem('username');
       }
       fetchUserCount();
       setIsLoading(false);
@@ -178,22 +177,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // 1. Clear all local storage and session data first
       localStorage.clear();
       sessionStorage.clear();
-
-      // 2. Clear local state
       setUser(null);
       setUsername(null);
       setRole(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
-
-      // 3. Attempt to sign out from Supabase      await supabase.auth.signOut();
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error during logout:", error);
     } finally {
-      // 4. Always force a hard reload to ensure all memory/cookies are cleared
       window.location.href = '/';
     }
   };
@@ -249,7 +243,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,
-      resetPassword    }}>
+      resetPassword
+    }}>
       {children}
     </AuthContext.Provider>
   );
