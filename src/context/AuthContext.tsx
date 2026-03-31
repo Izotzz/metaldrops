@@ -24,7 +24,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Recuperación síncrona inmediata para evitar parpadeos
   const getInitialUser = () => {
     try {
       const savedUser = localStorage.getItem('auth_user');
@@ -35,7 +34,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const [user, setUser] = useState<SupabaseUser | null>(getInitialUser);
-  const [username, setUsername] = useState<string | null>(localStorage.getItem('username'));
+  const [username, setUsername] = useState<string | null>(() => {
+    // Intentar recuperar nombre guardado o de los metadatos del usuario inicial
+    const saved = localStorage.getItem('username');
+    if (saved) return saved;
+    const initialUser = getInitialUser();
+    return initialUser?.user_metadata?.username || initialUser?.email?.split('@')[0] || null;
+  });
+  
   const [role, setRole] = useState<string | null>(localStorage.getItem('user_role'));
   const [dbCount, setDbCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
@@ -66,12 +72,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!error && data) {
-        setUsername(data.username);
+        const finalUsername = data.username || user?.user_metadata?.username || user?.email?.split('@')[0];
+        setUsername(finalUsername);
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
 
-        if (data.username) localStorage.setItem('username', data.username);
+        if (finalUsername) localStorage.setItem('username', finalUsername);
         if (data.role) localStorage.setItem('user_role', data.role);
       }
     } catch (e) {
@@ -88,9 +95,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!existing) {
+        const newUsername = supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User';
         await supabase.from('profiles').insert({
           id: supabaseUser.id,
-          username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User',
+          username: newUsername,
           role: 'user'
         });
         fetchUserCount();
@@ -114,6 +122,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (session?.user) {
             setUser(session.user);
             localStorage.setItem('auth_user', JSON.stringify(session.user));
+            
+            // Actualizar nombre desde metadatos inmediatamente si no hay uno en estado
+            const metaUsername = session.user.user_metadata?.username || session.user.email?.split('@')[0];
+            if (metaUsername && !username) {
+              setUsername(metaUsername);
+              localStorage.setItem('username', metaUsername);
+            }
+            
             fetchProfile(session.user.id);
             ensureProfileExists(session.user);
           } else {
@@ -139,6 +155,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         localStorage.setItem('auth_user', JSON.stringify(session.user));
+        
+        const metaUsername = session.user.user_metadata?.username || session.user.email?.split('@')[0];
+        if (metaUsername) {
+          setUsername(metaUsername);
+          localStorage.setItem('username', metaUsername);
+        }
+        
         fetchProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -169,8 +192,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         setUser(data.user);
         localStorage.setItem('auth_user', JSON.stringify(data.user));
+        
+        const loginUsername = data.user.user_metadata?.username || data.user.email?.split('@')[0];
+        if (loginUsername) {
+          setUsername(loginUsername);
+          localStorage.setItem('username', loginUsername);
+        }
+        
         await fetchProfile(data.user.id);
-        return { success: true, message: username || data.user.email || 'User' };
+        return { success: true, message: loginUsername || 'User' };
       }
       return { success: false, message: "Login failed" };
     } catch (error: any) {
@@ -200,6 +230,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setUser(data.user);
         localStorage.setItem('auth_user', JSON.stringify(data.user));
+        setUsername(regUsername);
+        localStorage.setItem('username', regUsername);
         await ensureProfileExists(data.user);
         await fetchProfile(data.user.id);
         return { success: true, message: "Registration successful" };

@@ -148,7 +148,7 @@ const Navbar = () => {
                     <User className="h-3.5 w-3.5 text-red-500" />
                   </div>
                   <span className="text-xs font-black text-gray-300 uppercase tracking-tighter">
-                    {username || "User"}
+                    {username}
                   </span>
                 </div>
                 
