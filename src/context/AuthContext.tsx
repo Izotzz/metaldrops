@@ -35,7 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [user, setUser] = useState<SupabaseUser | null>(getInitialUser);
   const [username, setUsername] = useState<string | null>(() => {
-    // Intentar recuperar nombre guardado o de los metadatos del usuario inicial
     const saved = localStorage.getItem('username');
     if (saved) return saved;
     const initialUser = getInitialUser();
@@ -49,7 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  const BASE_MEMBERS = 7;
+  // Actualizado a 19 miembros base
+  const BASE_MEMBERS = 19;
   const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
@@ -123,7 +123,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(session.user);
             localStorage.setItem('auth_user', JSON.stringify(session.user));
             
-            // Actualizar nombre desde metadatos inmediatamente si no hay uno en estado
             const metaUsername = session.user.user_metadata?.username || session.user.email?.split('@')[0];
             if (metaUsername && !username) {
               setUsername(metaUsername);
