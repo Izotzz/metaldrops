@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import MyProducts from "./pages/MyProducts";
 import Checkout from "./pages/Checkout";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AuthBanner from "./components/AuthBanner";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/my-products" element={<MyProducts />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

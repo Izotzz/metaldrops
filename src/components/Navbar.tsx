@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn, Loader2 } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn, Loader2, Settings } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
@@ -143,14 +143,14 @@ const Navbar = () => {
                   <Bell className="h-5 w-5" />
                 </Button>
 
-                <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
-                  <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center">
+                <Link to="/settings" className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group">
+                  <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center group-hover:bg-red-600/30 transition-colors">
                     <User className="h-3.5 w-3.5 text-red-500" />
                   </div>
-                  <span className="text-xs font-black text-gray-300 uppercase tracking-tighter">
+                  <span className="text-xs font-black text-gray-300 uppercase tracking-tighter group-hover:text-white transition-colors">
                     {username}
                   </span>
-                </div>
+                </Link>
                 
                 <Button 
                   variant="ghost" 
