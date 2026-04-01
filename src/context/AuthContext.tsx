@@ -48,7 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  // Actualizado a 19 miembros base
   const BASE_MEMBERS = 19;
   const userCount = BASE_MEMBERS + dbCount;
 
@@ -224,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       if (data.user) {
+        // Si no hay sesión inmediata, es que requiere confirmación por email
         if (!data.session) {
           return { success: true, message: "Please check your email to confirm your account." };
         }

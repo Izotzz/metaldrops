@@ -57,6 +57,7 @@ const Register = () => {
       
       if (result.success) {
         showSuccess(result.message);
+        // Si el mensaje indica que revise el email, redirigimos al login
         if (result.message.includes("check your email")) {
           navigate('/login');
         } else {
