@@ -16,6 +16,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import MyProducts from "./pages/MyProducts";
 import Checkout from "./pages/Checkout";
 import Settings from "./pages/Settings";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import AuthBanner from "./components/AuthBanner";
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/my-products" element={<MyProducts />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

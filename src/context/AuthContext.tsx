@@ -184,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.signInWithPassword({ email, password });
       if (error) throw error;
       
       if (data.user) {
@@ -216,14 +216,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: { username: regUsername },
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
 
       if (error) throw error;
       
       if (data.user) {
-        // Si no hay sesión inmediata, es que requiere confirmación por email
         if (!data.session) {
           return { success: true, message: "Please check your email to confirm your account." };
         }
