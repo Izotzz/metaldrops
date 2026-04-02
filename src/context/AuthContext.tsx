@@ -75,7 +75,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!existing) {
-        const newUsername = supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'User';
+        // Priorizamos display_name de los metadatos
+        const newUsername = supabaseUser.user_metadata?.display_name || 
+                          supabaseUser.user_metadata?.username || 
+                          supabaseUser.email?.split('@')[0] || 
+                          'User';
+        
         await supabase.from('profiles').insert({
           id: supabaseUser.id,
           username: newUsername,
@@ -151,7 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         setUser(data.user);
         await fetchProfile(data.user.id);
-        return { success: true, message: username || 'User' };
+        // Devolvemos el display_name de los metadatos para el mensaje de bienvenida inmediato
+        const displayName = data.user.user_metadata?.display_name || data.user.user_metadata?.username || 'User';
+        return { success: true, message: displayName };
       }
       return { success: false, message: "Login failed" };
     } catch (error: any) {
@@ -168,7 +175,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
-          data: { username: regUsername },
+          // Guardamos el nombre en display_name como se solicitó
+          data: { display_name: regUsername },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
