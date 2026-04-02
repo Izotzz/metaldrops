@@ -27,6 +27,9 @@ const ForgotPassword = () => {
       return;
     }
 
+    // Verificación visual del input antes de la llamada
+    alert('Enviando a: ' + email);
+    
     setIsLoading(true);
     try {
       const result = await sendResetCode(email);
@@ -36,14 +39,11 @@ const ForgotPassword = () => {
       } else {
         setError(result.message);
         showError(result.message);
-        // Alerta técnica para depuración inmediata
-        alert(`Supabase Error: ${result.message}`);
       }
     } catch (err: any) {
-      const msg = err.message || "An unexpected error occurred";
-      setError(msg);
-      alert(`Technical Exception: ${msg}`);
+      setError(err.message);
     } finally {
+      // El estado de carga solo se quita cuando Supabase responde
       setIsLoading(false);
     }
   };

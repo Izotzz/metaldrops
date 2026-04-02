@@ -237,12 +237,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://metaldrops.store/reset-password',
       });
-      if (error) throw error;
-      return { success: true, message: "Reset link sent" };
+      
+      if (error) {
+        alert('ERROR DE SUPABASE: ' + error.message);
+        console.error(error);
+        return { success: false, message: error.message };
+      } else {
+        alert('PETICIÓN ACEPTADA POR SUPABASE: ' + JSON.stringify(data));
+        return { success: true, message: "Reset link sent" };
+      }
     } catch (error: any) {
+      alert('EXCEPCIÓN TÉCNICA: ' + error.message);
       return { success: false, message: error.message };
     }
   };
