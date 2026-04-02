@@ -141,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Aseguramos que usamos el método correcto de la v2 de Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -233,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/forgot-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) return { success: false, message: error.message };
     return { success: true, message: "Reset link sent" };
