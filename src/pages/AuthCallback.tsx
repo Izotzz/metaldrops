@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
@@ -9,38 +9,47 @@ import { motion } from 'framer-motion';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Supabase procesa automáticamente el hash de la URL al inicializarse o con getSession
         const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (error) throw error;
+        if (error) {
+          // Si hay error (ej: token expirado), mostramos alerta y redirigimos
+          alert("Security Alert: The link has expired or is invalid. Please request a new one.");
+          setStatus('error');
+          showError("Link expired or invalid.");
+          setTimeout(() => navigate('/login'), 2000);
+          return;
+        }
 
         if (session) {
           setStatus('success');
-          showSuccess("Verification successful. Logged in.");
+          showSuccess("Access verified.");
           
-          // Pequeña espera para que el usuario vea el estado de éxito
+          // Si venimos de un flujo de reset password, vamos a esa página
+          const next = searchParams.get('next') || '/';
           setTimeout(() => {
-            navigate('/');
-          }, 2000);
+            navigate(next);
+          }, 1500);
         } else {
-          // Si no hay sesión y estamos en esta página, el link probablemente expiró o es inválido
           setStatus('error');
-          showError("Verification link expired or invalid.");
+          alert("Invalid session. Please login again.");
+          navigate('/login');
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
         setStatus('error');
-        showError(error.message || "Authentication failed.");
+        alert("Authentication failed: " + error.message);
+        navigate('/login');
       }
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
@@ -65,7 +74,7 @@ const AuthCallback = () => {
               <CheckCircle2 className="h-10 w-10 text-green-500" />
             </div>
             <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Verification Successful</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Welcome to the elite. Redirecting to home...</p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Redirecting...</p>
           </div>
         )}
 
@@ -74,14 +83,8 @@ const AuthCallback = () => {
             <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto border border-red-600/20">
               <XCircle className="h-10 w-10 text-red-600" />
             </div>
-            <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Link Expired</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-8">This verification link is no longer valid or has already been used.</p>
-            <button 
-              onClick={() => navigate('/login')}
-              className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl uppercase tracking-widest text-xs transition-all"
-            >
-              Return to Login
-            </button>
+            <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Access Denied</h2>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">The link is no longer valid. Redirecting to login...</p>
           </div>
         )}
       </motion.div>

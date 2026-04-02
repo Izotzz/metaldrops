@@ -66,32 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const ensureProfileExists = async (supabaseUser: SupabaseUser) => {
-    try {
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', supabaseUser.id)
-        .maybeSingle();
-
-      if (!existing) {
-        const newUsername = supabaseUser.user_metadata?.display_name || 
-                          supabaseUser.user_metadata?.username || 
-                          supabaseUser.email?.split('@')[0] || 
-                          'User';
-        
-        await supabase.from('profiles').insert({
-          id: supabaseUser.id,
-          username: newUsername,
-          role: 'user'
-        });
-        fetchUserCount();
-      }
-    } catch (e) {
-      console.error("[Auth] Profile creation error:", e);
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
 
@@ -106,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (session?.user) {
             setUser(session.user);
             fetchProfile(session.user.id);
-            ensureProfileExists(session.user);
           }
           fetchUserCount();
         }
@@ -169,6 +142,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
     setIsLoading(true);
     try {
+      // COMPROBACIÓN PREVIA: Evitar que se dispare el email si el usuario ya existe
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .or(`email.eq.${email},username.eq.${regUsername}`)
+        .maybeSingle();
+
+      if (existingUser) {
+        return { success: false, message: "User already exists with this email or username." };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -185,7 +169,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true, message: "Please check your email to confirm your account." };
         }
         setUser(data.user);
-        await ensureProfileExists(data.user);
         await fetchProfile(data.user.id);
         return { success: true, message: "Registration successful" };
       }
@@ -238,12 +221,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendResetCode = async (email: string) => {
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://metaldrops.store/reset-password',
+        redirectTo: 'https://metaldrops.store/auth/callback?next=/reset-password',
       });
       
       if (error) {
         alert('ERROR DE SUPABASE: ' + error.message);
-        console.error(error);
         return { success: false, message: error.message };
       } else {
         alert('PETICIÓN ACEPTADA POR SUPABASE: ' + JSON.stringify(data));
