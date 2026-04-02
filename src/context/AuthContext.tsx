@@ -24,24 +24,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const getInitialUser = () => {
-    try {
-      const savedUser = localStorage.getItem('auth_user');
-      return savedUser ? JSON.parse(savedUser) as SupabaseUser : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const [user, setUser] = useState<SupabaseUser | null>(getInitialUser);
-  const [username, setUsername] = useState<string | null>(() => {
-    const saved = localStorage.getItem('username');
-    if (saved) return saved;
-    const initialUser = getInitialUser();
-    return initialUser?.user_metadata?.username || initialUser?.email?.split('@')[0] || null;
-  });
-  
-  const [role, setRole] = useState<string | null>(localStorage.getItem('user_role'));
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [dbCount, setDbCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
@@ -71,14 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!error && data) {
-        const finalUsername = data.username || user?.user_metadata?.username || user?.email?.split('@')[0];
-        setUsername(finalUsername);
+        setUsername(data.username);
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
-
-        if (finalUsername) localStorage.setItem('username', finalUsername);
-        if (data.role) localStorage.setItem('user_role', data.role);
       }
     } catch (e) {
       console.error("[Auth] Profile fetch exception:", e);
@@ -120,21 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
-            localStorage.setItem('auth_user', JSON.stringify(session.user));
-            
-            const metaUsername = session.user.user_metadata?.username || session.user.email?.split('@')[0];
-            if (metaUsername && !username) {
-              setUsername(metaUsername);
-              localStorage.setItem('username', metaUsername);
-            }
-            
             fetchProfile(session.user.id);
             ensureProfileExists(session.user);
-          } else {
-            setUser(null);
-            localStorage.removeItem('auth_user');
-            localStorage.removeItem('username');
-            localStorage.removeItem('user_role');
           }
           fetchUserCount();
         }
@@ -152,14 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        localStorage.setItem('auth_user', JSON.stringify(session.user));
-        
-        const metaUsername = session.user.user_metadata?.username || session.user.email?.split('@')[0];
-        if (metaUsername) {
-          setUsername(metaUsername);
-          localStorage.setItem('username', metaUsername);
-        }
-        
         fetchProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -167,9 +127,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
-        localStorage.removeItem('auth_user');
-        localStorage.removeItem('username');
-        localStorage.removeItem('user_role');
       }
       
       setIsLoading(false);
@@ -184,21 +141,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.signInWithPassword({ email, password });
+      // Aseguramos que usamos el método correcto de la v2 de Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
       if (error) throw error;
       
       if (data.user) {
         setUser(data.user);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
-        
-        const loginUsername = data.user.user_metadata?.username || data.user.email?.split('@')[0];
-        if (loginUsername) {
-          setUsername(loginUsername);
-          localStorage.setItem('username', loginUsername);
-        }
-        
         await fetchProfile(data.user.id);
-        return { success: true, message: loginUsername || 'User' };
+        return { success: true, message: username || 'User' };
       }
       return { success: false, message: "Login failed" };
     } catch (error: any) {
@@ -227,9 +181,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true, message: "Please check your email to confirm your account." };
         }
         setUser(data.user);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
-        setUsername(regUsername);
-        localStorage.setItem('username', regUsername);
         await ensureProfileExists(data.user);
         await fetchProfile(data.user.id);
         return { success: true, message: "Registration successful" };
@@ -246,9 +197,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('username');
-      localStorage.removeItem('user_role');
       setUser(null);
       setUsername(null);
       setRole(null);
