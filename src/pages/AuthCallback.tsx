@@ -18,11 +18,9 @@ const AuthCallback = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
-          // Si hay error (ej: token expirado), mostramos alerta y redirigimos
-          alert("Security Alert: The link has expired or is invalid. Please request a new one.");
           setStatus('error');
-          showError("Link expired or invalid.");
-          setTimeout(() => navigate('/login'), 2000);
+          showError("Security Alert: The link has expired or is invalid.");
+          setTimeout(() => navigate('/login'), 3000);
           return;
         }
 
@@ -30,21 +28,20 @@ const AuthCallback = () => {
           setStatus('success');
           showSuccess("Access verified.");
           
-          // Si venimos de un flujo de reset password, vamos a esa página
           const next = searchParams.get('next') || '/';
           setTimeout(() => {
             navigate(next);
           }, 1500);
         } else {
           setStatus('error');
-          alert("Invalid session. Please login again.");
-          navigate('/login');
+          showError("Invalid session. Please login again.");
+          setTimeout(() => navigate('/login'), 3000);
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
         setStatus('error');
-        alert("Authentication failed: " + error.message);
-        navigate('/login');
+        showError("Authentication failed.");
+        setTimeout(() => navigate('/login'), 3000);
       }
     };
 

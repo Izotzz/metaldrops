@@ -26,9 +26,6 @@ const ForgotPassword = () => {
       setError("Please enter your email address");
       return;
     }
-
-    // Verificación visual del input antes de la llamada
-    alert('Enviando a: ' + email);
     
     setIsLoading(true);
     try {
@@ -43,7 +40,6 @@ const ForgotPassword = () => {
     } catch (err: any) {
       setError(err.message);
     } finally {
-      // El estado de carga solo se quita cuando Supabase responde
       setIsLoading(false);
     }
   };

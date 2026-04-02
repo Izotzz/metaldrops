@@ -20,7 +20,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verificamos si hay una sesión activa (Supabase procesa el hash automáticamente)
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -31,7 +30,7 @@ const ResetPassword = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        console.log("Recovery session active");
+        console.log("Recovery session active - staying on page");
       }
     });
 
@@ -63,13 +62,12 @@ const ResetPassword = () => {
         setError(result.message);
         setStatus('error');
         showError(result.message);
-        alert(`Update Error: ${result.message}`);
       }
     } catch (err: any) {
       const msg = err.message || "Failed to update password";
       setError(msg);
       setStatus('error');
-      alert(`Technical Exception: ${msg}`);
+      showError(msg);
     }
   };
 

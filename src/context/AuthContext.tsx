@@ -142,7 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
     setIsLoading(true);
     try {
-      // COMPROBACIÓN PREVIA: Evitar que se dispare el email si el usuario ya existe
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
@@ -220,19 +219,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://metaldrops.store/auth/callback?next=/reset-password',
       });
       
       if (error) {
-        alert('ERROR DE SUPABASE: ' + error.message);
         return { success: false, message: error.message };
-      } else {
-        alert('PETICIÓN ACEPTADA POR SUPABASE: ' + JSON.stringify(data));
-        return { success: true, message: "Reset link sent" };
       }
+      return { success: true, message: "Reset link sent" };
     } catch (error: any) {
-      alert('EXCEPCIÓN TÉCNICA: ' + error.message);
       return { success: false, message: error.message };
     }
   };
