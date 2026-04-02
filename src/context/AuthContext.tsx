@@ -75,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!existing) {
-        // Priorizamos display_name de los metadatos
         const newUsername = supabaseUser.user_metadata?.display_name || 
                           supabaseUser.user_metadata?.username || 
                           supabaseUser.email?.split('@')[0] || 
@@ -156,7 +155,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         setUser(data.user);
         await fetchProfile(data.user.id);
-        // Devolvemos el display_name de los metadatos para el mensaje de bienvenida inmediato
         const displayName = data.user.user_metadata?.display_name || data.user.user_metadata?.username || 'User';
         return { success: true, message: displayName };
       }
@@ -175,9 +173,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
-          // Guardamos el nombre en display_name como se solicitó
           data: { display_name: regUsername },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `https://metaldrops.store/auth/callback`,
         }
       });
 
@@ -239,17 +236,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const sendResetCode = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) return { success: false, message: error.message };
-    return { success: true, message: "Reset link sent" };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://metaldrops.store/reset-password',
+      });
+      if (error) throw error;
+      return { success: true, message: "Reset link sent" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
   };
 
   const resetPassword = async (password: string) => {
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) return { success: false, message: error.message };
-    return { success: true, message: "Password updated" };
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      return { success: true, message: "Password updated" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
   };
 
   return (

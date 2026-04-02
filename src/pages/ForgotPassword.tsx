@@ -36,7 +36,13 @@ const ForgotPassword = () => {
       } else {
         setError(result.message);
         showError(result.message);
+        // Alerta técnica para depuración inmediata
+        alert(`Supabase Error: ${result.message}`);
       }
+    } catch (err: any) {
+      const msg = err.message || "An unexpected error occurred";
+      setError(msg);
+      alert(`Technical Exception: ${msg}`);
     } finally {
       setIsLoading(false);
     }
