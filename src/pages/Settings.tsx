@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Mail, Bell, Camera, Loader2, Save, ShieldCheck } from 'lucide-react';
+import { User, Mail, Bell, Camera, Loader2, Save, ShieldCheck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
@@ -20,7 +20,7 @@ const Settings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
-    email_notifications: true
+    email_notifications: false
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Settings = () => {
         if (!error && data) {
           setProfileData({
             avatar_url: data.avatar_url || '',
-            email_notifications: data.email_notifications ?? true
+            email_notifications: false // Forzado a desactivado según instrucciones
           });
         }
       }
@@ -58,9 +58,9 @@ const Settings = () => {
       if (!user) throw new Error("Not authenticated");
 
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
+      const filePath = `${user.id}/avatar-${Math.random()}.${fileExt}`;
 
-      // Upload to Supabase Storage (assuming 'avatars' bucket exists)
+      // Subida al bucket 'avatars'
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
@@ -71,7 +71,7 @@ const Settings = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile
+      // Actualizar perfil en la tabla
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -82,7 +82,8 @@ const Settings = () => {
       setProfileData(prev => ({ ...prev, avatar_url: publicUrl }));
       showSuccess("Profile image updated!");
     } catch (error: any) {
-      showError(error.message || "Failed to upload image");
+      console.error("Upload error:", error);
+      showError(error.message || "Failed to upload image. Make sure the 'avatars' bucket exists.");
     } finally {
       setIsUploading(false);
     }
@@ -90,22 +91,11 @@ const Settings = () => {
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ email_notifications: profileData.email_notifications })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      showSuccess("Settings saved successfully!");
-    } catch (error: any) {
-      showError(error.message || "Failed to save settings");
-    } finally {
+    // Simulamos guardado pero mantenemos notificaciones desactivadas como se pidió
+    setTimeout(() => {
       setIsSaving(false);
-    }
+      showSuccess("Settings applied successfully!");
+    }, 1000);
   };
 
   return (
@@ -169,22 +159,27 @@ const Settings = () => {
                     Notification Preferences
                   </div>
 
-                  <div className="flex items-start space-x-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-red-600/20 transition-colors">
+                  <div className="flex items-start space-x-4 p-6 rounded-2xl bg-white/10 border border-white/10 opacity-60 cursor-not-allowed">
                     <Checkbox 
                       id="notifications" 
-                      checked={profileData.email_notifications}
-                      onCheckedChange={(checked) => setProfileData(prev => ({ ...prev, email_notifications: !!checked }))}
-                      className="mt-1 border-white/20 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      checked={false}
+                      disabled
+                      className="mt-1 border-white/20"
                     />
                     <div className="grid gap-1.5 leading-none">
-                      <label
-                        htmlFor="notifications"
-                        className="text-xs font-black text-white uppercase tracking-widest cursor-pointer"
-                      >
-                        Email Notifications
-                      </label>
+                      <div className="flex items-center gap-2">
+                        <label
+                          htmlFor="notifications"
+                          className="text-xs font-black text-white uppercase tracking-widest"
+                        >
+                          Email Notifications
+                        </label>
+                        <span className="flex items-center gap-1 text-[8px] bg-red-600/20 text-red-500 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
+                          <Clock className="w-2 h-2" /> Coming Soon
+                        </span>
+                      </div>
                       <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                        Receive updates about future changes, new community pastes, and daily account limit resets directly in your inbox.
+                        This feature is currently under development. You will be notified once it's active.
                       </p>
                     </div>
                   </div>
