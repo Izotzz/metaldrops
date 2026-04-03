@@ -32,6 +32,7 @@ const SERVICES = [
 ];
 
 const PRICES = { '1 MONTH': 2.99, '3 MONTHS': 8.99, '1 YEAR': 29.99 };
+const FAMILY_LINK_PRICES = { '1 MONTH': 4.99, '3 MONTHS': 10.99, '1 YEAR': 35.99 };
 
 const Accounts = () => {
   const { addToCart } = useCart();
@@ -99,9 +100,9 @@ const Accounts = () => {
                 <div className="text-center">
                   <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-6">RANDOM ACCOUNT</h4>
                   <div className="flex gap-2">
-                    <PlanButton serviceName="Spotify" type="Random" duration="1 MONTH" price={2.99} showPrice={false} />
-                    <PlanButton serviceName="Spotify" type="Random" duration="3 MONTHS" price={8.99} showPrice={false} />
-                    <PlanButton serviceName="Spotify" type="Random" duration="1 YEAR" price={29.99} showPrice={false} />
+                    <PlanButton serviceName="Spotify" type="Random" duration="1 MONTH" price={PRICES['1 MONTH']} />
+                    <PlanButton serviceName="Spotify" type="Random" duration="3 MONTHS" price={PRICES['3 MONTHS']} />
+                    <PlanButton serviceName="Spotify" type="Random" duration="1 YEAR" price={PRICES['1 YEAR']} />
                   </div>
                 </div>
 
@@ -115,9 +116,9 @@ const Accounts = () => {
                   <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">IN YOUR ACCOUNT</h4>
                   <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Family Link</p>
                   <div className="flex gap-2">
-                    <PlanButton serviceName="Spotify" type="Family Link" duration="1 MONTH" price={2.99} showPrice={false} />
-                    <PlanButton serviceName="Spotify" type="Family Link" duration="3 MONTHS" price={8.99} showPrice={false} />
-                    <PlanButton serviceName="Spotify" type="Family Link" duration="1 YEAR" price={29.99} showPrice={false} />
+                    <PlanButton serviceName="Spotify" type="Family Link" duration="1 MONTH" price={FAMILY_LINK_PRICES['1 MONTH']} />
+                    <PlanButton serviceName="Spotify" type="Family Link" duration="3 MONTHS" price={FAMILY_LINK_PRICES['3 MONTHS']} />
+                    <PlanButton serviceName="Spotify" type="Family Link" duration="1 YEAR" price={FAMILY_LINK_PRICES['1 YEAR']} />
                   </div>
                 </div>
               </div>
@@ -144,20 +145,16 @@ const Accounts = () => {
                 <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1">
                   {service.name}
                 </h3>
-                <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest mb-8">{service.name}</p>
+                <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest mb-8">
+                  {service.id === 'xbox' || service.id === 'minecraft' ? 'Gaming' : 'Streaming'}
+                </p>
 
                 <div className="w-full mt-auto">
-                  <div className="flex gap-2 mb-6">
+                  <div className="flex gap-2">
                     {Object.entries(PRICES).map(([duration, price]) => (
                       <PlanButton key={duration} serviceName={service.name} type={service.type} duration={duration} price={price} />
                     ))}
                   </div>
-                  <button 
-                    onClick={() => handleAddToCart(service.name, service.type, '1 MONTH', 2.99)}
-                    className="flex items-center justify-center gap-2 w-full text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-red-600 transition-colors group/cart"
-                  >
-                    <ShoppingCart className="w-3 h-3 group-hover/cart:scale-110 transition-transform" /> ADD TO CART
-                  </button>
                 </div>
               </motion.div>
             ))}
