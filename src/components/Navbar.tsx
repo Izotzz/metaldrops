@@ -71,6 +71,7 @@ const Navbar = () => {
       className="fixed left-0 right-0 z-50 px-4 transition-[top] duration-500"
     >
       <nav className="container mx-auto max-w-6xl h-16 flex items-center justify-between px-4 md:px-6 rounded-2xl border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+        {/* Logo Section - Visible on all screens */}
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
             <motion.div 
@@ -79,12 +80,12 @@ const Navbar = () => {
             >
               M
             </motion.div>
-            <span className="text-xl font-black tracking-tighter text-white hidden sm:block uppercase italic">Metal Drops</span>
+            <span className="text-xl font-black tracking-tighter text-white uppercase italic">Metal Drops</span>
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Desktop Navigation - Hidden on Mobile/Tablet, Visible on LG (1024px+) */}
+        <div className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
             <Link
               key={item.name}
@@ -126,7 +127,9 @@ const Navbar = () => {
           )}
         </div>
 
+        {/* Right Side Actions */}
         <div className="flex items-center gap-2 md:gap-3">
+          {/* Cart - Visible on all screens */}
           <CartSheet />
           
           {isLoading ? (
@@ -135,7 +138,8 @@ const Navbar = () => {
             </div>
           ) : (
             isLoggedIn ? (
-              <div className="hidden md:flex items-center gap-3">
+              /* Desktop User Actions - Hidden on Mobile/Tablet */
+              <div className="hidden lg:flex items-center gap-3">
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -164,7 +168,8 @@ const Navbar = () => {
                 </Button>
               </div>
             ) : (
-              <Link to="/login" className="hidden md:block">
+              /* Desktop Login Button - Hidden on Mobile/Tablet */
+              <Link to="/login" className="hidden lg:block">
                 <Button className="bg-red-600 hover:bg-red-500 text-white font-black px-6 h-10 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] uppercase tracking-widest text-[10px]">
                   Access <LogIn className="ml-2 h-3.5 w-3.5" />
                 </Button>
@@ -172,10 +177,10 @@ const Navbar = () => {
             )
           )}
           
-          {/* Mobile Menu Trigger */}
+          {/* Mobile Menu Trigger - Visible ONLY on Mobile/Tablet (below 1024px) */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden text-gray-400 hover:text-white hover:bg-white/5 rounded-xl h-10 w-10">
+              <Button variant="ghost" size="icon" className="lg:hidden text-gray-400 hover:text-white hover:bg-white/5 rounded-xl h-10 w-10">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
