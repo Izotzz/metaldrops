@@ -21,14 +21,14 @@ import minecraftLogo from '@/assets/minecraft_logo.png';
 import expressvpnLogo from '@/assets/expressvpn_logo.png';
 
 const SERVICES = [
-  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'shadow-[0_0_50px_rgba(229,9,20,0.4)]' },
-  { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'shadow-[0_0_50px_rgba(255,255,255,0.15)]' },
-  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'shadow-[0_0_50px_rgba(244,117,33,0.4)]' },
-  { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'shadow-[0_0_50px_rgba(0,110,153,0.4)]' },
-  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'shadow-[0_0_50px_rgba(0,100,255,0.4)]' },
-  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'shadow-[0_0_50px_rgba(16,124,16,0.4)]' },
-  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'shadow-[0_0_50px_rgba(255,255,255,0.1)]' },
-  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'shadow-[0_0_50px_rgba(255,28,28,0.4)]' },
+  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'rgba(229,9,20,0.5)' },
+  { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'rgba(255,255,255,0.2)' },
+  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'rgba(244,117,33,0.5)' },
+  { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'rgba(0,110,153,0.5)' },
+  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'rgba(0,100,255,0.5)' },
+  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'rgba(16,124,16,0.5)' },
+  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'rgba(255,255,255,0.15)' },
+  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'rgba(255,28,28,0.5)' },
 ];
 
 const PRICES = {
@@ -50,76 +50,76 @@ const Accounts = () => {
     showSuccess(`${serviceName} added to cart!`);
   };
 
-  const PlanButton = ({ serviceName, type, duration, price }: any) => (
+  const PlanButton = ({ serviceName, type, duration, price, shortLabel }: any) => (
     <button
       onClick={() => handleAddToCart(serviceName, type, duration, price)}
-      className="flex-1 group/btn relative flex flex-col items-center justify-center py-3 px-1 bg-black border border-white/10 rounded-xl transition-all duration-300 hover:border-red-600 hover:bg-red-600/10"
+      className="flex-1 group/btn relative flex flex-col items-center justify-center py-2 px-1 bg-black/80 border border-white/10 rounded-lg transition-all duration-300 hover:border-red-600 hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]"
     >
-      <span className="text-[8px] font-black text-white uppercase tracking-widest mb-1">{duration}</span>
-      <div className="flex items-center gap-1">
-        <span className="text-[10px] font-black text-red-600">€{price.toFixed(2)}</span>
-        <ShoppingCart className="w-2.5 h-2.5 text-gray-500 group-hover/btn:text-white transition-colors" />
-      </div>
+      <span className="text-[10px] font-black text-white uppercase tracking-tighter mb-0.5">{shortLabel || duration}</span>
+      <span className="text-[9px] font-black text-red-600 tracking-tighter">€{price.toFixed(2)}</span>
     </button>
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#050505] relative overflow-hidden">
-      {/* Metallic Grid Pattern */}
-      <div className="fixed inset-0 z-0 opacity-30 pointer-events-none bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div className="min-h-screen flex flex-col bg-[#020202] relative overflow-hidden">
+      {/* Metallic Grid Background */}
+      <div className="fixed inset-0 z-0 opacity-40 pointer-events-none bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:12px_12px]"></div>
       
-      {/* Red Smoke/Glow Effects */}
-      <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-red-600/10 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-600/10 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="fixed top-[40%] left-[30%] w-[40%] h-[40%] bg-red-600/5 blur-[150px] rounded-full pointer-events-none"></div>
+      {/* Red Ambient Glows */}
+      <div className="fixed top-[-20%] left-[-10%] w-[60%] h-[60%] bg-red-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+      <div className="fixed bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-red-900/10 blur-[150px] rounded-full pointer-events-none"></div>
 
       <Navbar />
       
       <main className="flex-grow pt-40 pb-24 relative z-10">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
             {/* Spotify Special Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col"
+              className="p-8 rounded-[2rem] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_30px_rgba(220,38,38,0.15)] relative overflow-hidden group"
             >
-              <div className="flex flex-col items-center mb-8">
-                <div className="w-full h-24 flex items-center justify-center mb-4">
+              {/* Brushed Metal Texture Overlay */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
+              
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center justify-center gap-4 mb-10">
                   <img 
                     src={spotifyLogo} 
                     alt="Spotify" 
-                    className="h-full object-contain mix-blend-screen drop-shadow-[0_0_20px_rgba(30,215,96,0.5)]" 
+                    className="h-12 object-contain mix-blend-screen drop-shadow-[0_0_15px_rgba(30,215,96,0.6)]" 
                   />
+                  <h3 className="text-4xl font-black text-[#1DB954] uppercase italic tracking-tighter">Spotify</h3>
                 </div>
-              </div>
 
-              <div className="space-y-8 flex-grow">
-                {/* Random Account Section */}
-                <div className="text-center">
-                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">RANDOM ACCOUNT</h4>
-                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Random account</p>
-                  <div className="flex gap-2">
-                    {Object.entries(PRICES.standard).map(([duration, price]) => (
-                      <PlanButton key={duration} serviceName="Spotify" type="Random" duration={duration} price={price} />
-                    ))}
+                <div className="space-y-10 flex-grow">
+                  {/* Random Account Section */}
+                  <div className="text-center">
+                    <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">RANDOM ACCOUNT</h4>
+                    <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Random account</p>
+                    <div className="flex gap-3">
+                      <PlanButton serviceName="Spotify" type="Random" duration="1 MONTH" shortLabel="1M" price={2.99} />
+                      <PlanButton serviceName="Spotify" type="Random" duration="3 MONTHS" shortLabel="3M" price={8.99} />
+                      <PlanButton serviceName="Spotify" type="Random" duration="1 YEAR" shortLabel="1Y" price={29.99} />
+                    </div>
                   </div>
-                </div>
 
-                {/* Divider with Glow */}
-                <div className="relative h-px w-full bg-red-600/20">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 bg-red-600 blur-sm opacity-50"></div>
-                </div>
+                  {/* Divider with Energy Glow */}
+                  <div className="relative h-px w-full bg-red-600/20">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-1 bg-red-600 blur-md opacity-40"></div>
+                  </div>
 
-                {/* Family Link Section */}
-                <div className="text-center">
-                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">IN YOUR ACCOUNT <span className="text-gray-500 text-sm">(Family Link)</span></h4>
-                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">In your account</p>
-                  <div className="flex gap-2">
-                    {Object.entries(PRICES.spotify_family).map(([duration, price]) => (
-                      <PlanButton key={duration} serviceName="Spotify" type="Family Link" duration={duration} price={price} />
-                    ))}
+                  {/* Family Link Section */}
+                  <div className="text-center">
+                    <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">IN YOUR ACCOUNT <span className="text-gray-500 text-sm">(Family Link)</span></h4>
+                    <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">In your account</p>
+                    <div className="flex gap-3">
+                      <PlanButton serviceName="Spotify" type="Family Link" duration="1 MONTH" shortLabel="1M" price={2.99} />
+                      <PlanButton serviceName="Spotify" type="Family Link" duration="3 MONTHS" shortLabel="3M" price={8.99} />
+                      <PlanButton serviceName="Spotify" type="Family Link" duration="1 YEAR" shortLabel="1Y" price={29.99} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -132,33 +132,39 @@ const Accounts = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center text-center group"
+                className="p-8 rounded-[2rem] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_30px_rgba(220,38,38,0.15)] relative overflow-hidden group flex flex-col items-center text-center"
               >
-                <div className={cn("w-full h-28 flex items-center justify-center mb-6 transition-all duration-500", service.glow)}>
-                  <img 
-                    src={service.image} 
-                    alt={service.name} 
-                    className="h-full object-contain mix-blend-screen" 
-                  />
-                </div>
+                {/* Brushed Metal Texture Overlay */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
                 
-                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1">
-                  {service.name}
-                </h3>
-                <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest mb-8">{service.name}</p>
-
-                <div className="w-full mt-auto">
-                  <div className="flex gap-2 mb-4">
-                    {Object.entries(PRICES.standard).map(([duration, price]) => (
-                      <PlanButton key={duration} serviceName={service.name} type={service.type} duration={duration} price={price} />
-                    ))}
+                <div className="relative z-10 w-full flex flex-col h-full">
+                  <div className="h-24 flex items-center justify-center mb-6">
+                    <img 
+                      src={service.image} 
+                      alt={service.name} 
+                      className="h-full object-contain mix-blend-screen" 
+                      style={{ filter: `drop-shadow(0 0 20px ${service.glow})` }}
+                    />
                   </div>
-                  <button 
-                    onClick={() => handleAddToCart(service.name, service.type, '1 MONTH', PRICES.standard['1 MONTH'])}
-                    className="w-full flex items-center justify-center gap-2 text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-red-600 transition-colors"
-                  >
-                    <ShoppingCart className="w-3 h-3" /> ADD TO CART
-                  </button>
+                  
+                  <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1">
+                    {service.name}
+                  </h3>
+                  <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest mb-8">{service.name}</p>
+
+                  <div className="w-full mt-auto">
+                    <div className="flex gap-3 mb-6">
+                      <PlanButton serviceName={service.name} type={service.type} duration="1 MONTH" price={2.99} />
+                      <PlanButton serviceName={service.name} type={service.type} duration="3 MONTHS" price={8.99} />
+                      <PlanButton serviceName={service.name} type={service.type} duration="1 YEAR" price={29.99} />
+                    </div>
+                    <button 
+                      onClick={() => handleAddToCart(service.name, service.type, '1 MONTH', 2.99)}
+                      className="w-full flex items-center justify-center gap-2 text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-red-600 transition-colors group/cart"
+                    >
+                      <ShoppingCart className="w-3 h-3 group-hover/cart:scale-110 transition-transform" /> ADD TO CART
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
