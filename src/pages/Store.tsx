@@ -53,7 +53,7 @@ const Store = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black overflow-hidden">
       <Navbar />
-      <main className="flex-grow flex flex-col lg:flex-row pt-16 lg:pt-0">
+      <main className="flex-grow flex flex-col lg:flex-row pt-32 lg:pt-40">
         {/* Tools Section */}
         <Link 
           to="/products" 
@@ -65,7 +65,7 @@ const Store = () => {
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black z-10"></div>
           
-          <div className="relative z-20 h-full flex flex-col items-center justify-center p-12 text-center">
+          <div className="relative z-20 h-full flex flex-col items-center justify-center p-12 text-center py-24 lg:py-32">
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -74,7 +74,7 @@ const Store = () => {
               <Wrench className="w-10 h-10 text-red-600" />
             </motion.div>
             
-            <h2 className="text-5xl lg:text-7xl font-black text-white uppercase italic tracking-tighter mb-4 group-hover:text-red-600 transition-colors">
+            <h2 className="text-6xl lg:text-8xl font-black text-white uppercase italic tracking-tighter mb-4 group-hover:text-red-600 transition-colors">
               Tools
             </h2>
             <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] mb-12 max-w-xs mx-auto">
@@ -98,7 +98,7 @@ const Store = () => {
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black z-10"></div>
           
-          <div className="relative z-20 h-full flex flex-col items-center justify-center p-12 text-center">
+          <div className="relative z-20 h-full flex flex-col items-center justify-center p-12 text-center py-24 lg:py-32">
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -108,7 +108,7 @@ const Store = () => {
               <UserCircle className="w-10 h-10 text-red-600" />
             </motion.div>
             
-            <h2 className="text-5xl lg:text-7xl font-black text-white uppercase italic tracking-tighter mb-4 group-hover:text-red-600 transition-colors">
+            <h2 className="text-6xl lg:text-8xl font-black text-white uppercase italic tracking-tighter mb-4 group-hover:text-red-600 transition-colors">
               Accounts
             </h2>
             <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] mb-12 max-w-xs mx-auto">
