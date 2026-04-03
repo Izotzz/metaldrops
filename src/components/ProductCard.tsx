@@ -40,24 +40,22 @@ const ProductCard = ({ id, name, description, downloads, price, iconType, isHigh
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -10 }}
+      whileHover={{ y: -5 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "group relative flex flex-col rounded-[2.5rem] bg-[#050505] border transition-all duration-500 overflow-hidden p-10",
+        "group relative flex flex-col rounded-[2rem] sm:rounded-[2.5rem] bg-[#050505] border transition-all duration-500 overflow-hidden p-6 sm:p-10",
         isHighlighted 
           ? "border-red-600/40 shadow-[0_0_50px_rgba(220,38,38,0.15)]" 
-          : "border-white/5 hover:border-red-600/30 hover:bg-[#080808] hover:shadow-[0_0_40px_rgba(220,38,38,0.1)]"
+          : "border-white/5 hover:border-red-600/30 hover:bg-[#080808]"
       )}
     >
-      <div className="flex justify-between items-start mb-8">
-        <motion.div 
-          whileHover={{ rotate: 12, scale: 1.1 }}
-          className="w-14 h-14 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20"
-        >
-          <Icon className="w-7 h-7 text-red-600" />
-        </motion.div>
+      <div className="flex justify-between items-start mb-6 sm:mb-8">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20">
+          <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
+        </div>
         
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
           <Download className="w-3 h-3 text-red-600" />
           {downloads}
         </div>
@@ -65,20 +63,20 @@ const ProductCard = ({ id, name, description, downloads, price, iconType, isHigh
 
       <div className="flex-1">
         <h3 className={cn(
-          "text-3xl font-black mb-4 tracking-tighter uppercase italic",
+          "text-2xl sm:text-3xl font-black mb-3 sm:mb-4 tracking-tighter uppercase italic",
           isHighlighted ? "text-red-600" : "text-white group-hover:text-red-600 transition-colors"
         )}>
           {name}
         </h3>
-        <p className="text-gray-500 text-sm leading-relaxed mb-10 font-medium">
+        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mb-8 sm:mb-10 font-medium">
           {description}
         </p>
 
-        <div className="mt-auto flex items-center justify-between">
-          <div className="text-xl font-black text-white">{price.toFixed(2)}€</div>
+        <div className="mt-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xl sm:text-2xl font-black text-white">{price.toFixed(2)}€</div>
           <Button 
             onClick={handleAddToCart}
-            className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12 px-6 uppercase tracking-widest text-[10px]"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-14 sm:h-12 px-8 sm:px-6 uppercase tracking-widest text-[10px]"
           >
             Add to Cart <ShoppingCart className="ml-2 h-4 w-4" />
           </Button>

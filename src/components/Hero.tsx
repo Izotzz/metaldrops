@@ -43,37 +43,37 @@ const Hero = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="container mx-auto px-4 relative z-10"
+        className="container mx-auto px-6 relative z-10"
       >
         <div className="max-w-4xl text-center lg:text-left">
-          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.8] mb-6">
+          <motion.h1 variants={itemVariants} className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.85] sm:leading-[0.8] mb-6">
             <span className="text-red-600 block">METAL</span>
             <span className="text-white block">DROPS</span>
           </motion.h1>
           
-          <motion.h2 variants={itemVariants} className="text-2xl md:text-4xl lg:text-6xl font-black tracking-tighter text-white/80 mb-10 uppercase italic">
+          <motion.h2 variants={itemVariants} className="text-xl sm:text-2xl md:text-4xl lg:text-6xl font-black tracking-tighter text-white/80 mb-8 sm:mb-10 uppercase italic">
             MARKETPLACE
           </motion.h2>
           
-          <motion.p variants={itemVariants} className="text-[10px] md:text-xs font-black tracking-[0.4em] text-red-500 uppercase mb-12 opacity-80">
+          <motion.p variants={itemVariants} className="text-[9px] sm:text-[10px] md:text-xs font-black tracking-[0.3em] sm:tracking-[0.4em] text-red-500 uppercase mb-12 opacity-80">
             Premium Digital Assets & Tools for the Elite
           </motion.p>
           
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center lg:justify-start">
             <Link to="/products" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full bg-red-600 hover:bg-red-500 text-white font-black px-10 h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
+              <Button size="lg" className="w-full bg-red-600 hover:bg-red-500 text-white font-black px-10 h-16 sm:h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs">
                 Explore products <ArrowRight className="ml-3 h-4 w-4" />
               </Button>
             </Link>
             
             <Link to="/daily" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
+              <Button size="lg" variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-16 sm:h-14 uppercase tracking-widest text-xs font-black">
                 <Gift className="mr-3 h-4 w-4 text-red-600" /> Daily Account
               </Button>
             </Link>
             
             <a href="https://discord.gg/mNVCXqJADW" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-14 uppercase tracking-widest text-xs font-black">
+              <Button size="lg" variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-16 sm:h-14 uppercase tracking-widest text-xs font-black">
                 <MessageSquare className="mr-3 h-4 w-4" /> Discord
               </Button>
             </a>
@@ -86,7 +86,7 @@ const Hero = () => {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 2, ease: "easeOut" }}
-        className="absolute top-1/2 right-0 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-red-600/10 rounded-full blur-[80px] md:blur-[120px] -z-10"
+        className="absolute top-1/2 right-0 -translate-y-1/2 w-[200px] sm:w-[300px] md:w-[600px] h-[200px] sm:h-[300px] md:h-[600px] bg-red-600/10 rounded-full blur-[60px] sm:blur-[80px] md:blur-[120px] -z-10"
       ></motion.div>
     </section>
   );
