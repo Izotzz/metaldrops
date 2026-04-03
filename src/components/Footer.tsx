@@ -16,7 +16,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="space-y-6">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_15px_rgba(220,38,38,0.3)]">M</div>
               <span className="text-xl font-black tracking-tighter text-white uppercase italic">Metal Drops</span>
             </Link>
@@ -29,7 +29,7 @@ const Footer = () => {
             <h4 className="text-white font-black mb-6 uppercase tracking-[0.3em] text-[10px]">Navigation</h4>
             <ul className="space-y-4">
               <li><Link to="/" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Home</Link></li>
-              <li><Link to="/products" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Tools & Products</Link></li>
+              <li><Link to="/store" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Store</Link></li>
               <li><Link to="/daily" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Daily Account</Link></li>
               <li><Link to="/pastes" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Community Pastes</Link></li>
               <li><Link to="/free-games" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Free Games</Link></li>

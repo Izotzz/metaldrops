@@ -6,7 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import Index from "./pages/Index";
+import Store from "./pages/Store";
 import Products from "./pages/Products";
+import Accounts from "./pages/Accounts";
 import DailyAccountPage from "./pages/DailyAccountPage";
 import Pastes from "./pages/Pastes";
 import FreeGames from "./pages/FreeGames";
@@ -34,7 +36,9 @@ const App = () => (
             <AuthBanner />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/store" element={<Store />} />
               <Route path="/products" element={<Products />} />
+              <Route path="/accounts" element={<Accounts />} />
               <Route path="/daily" element={<DailyAccountPage />} />
               <Route path="/pastes" element={<Pastes />} />
               <Route path="/free-games" element={<FreeGames />} />
