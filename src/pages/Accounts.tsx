@@ -3,26 +3,37 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShoppingCart, Tv, Gamepad2, Shield, Music, Play, Monitor, Smartphone, Zap, Crown } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { showSuccess } from '@/utils/toast';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+// Import logos
+import spotifyLogo from '@/assets/spotify_logo.png';
+import netflixLogo from '@/assets/netflix_logo.png';
+import daznLogo from '@/assets/dazn_logo.png';
+import crunchyrollLogo from '@/assets/crunchyroll_logo.png';
+import disneyLogo from '@/assets/disney_logo.png';
+import paramountLogo from '@/assets/paramount_logo.png';
+import xboxLogo from '@/assets/xbox_logo.png';
+import minecraftLogo from '@/assets/minecraft_logo.png';
+import expressvpnLogo from '@/assets/expressvpn_logo.png';
+
 const SERVICES = [
-  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', icon: Tv, glow: 'shadow-[0_0_30px_rgba(229,9,20,0.4)]', iconColor: 'text-[#E50914]' },
-  { id: 'dazn', name: 'DAZN', type: 'Total Access', icon: Play, glow: 'shadow-[0_0_30px_rgba(255,255,255,0.2)]', iconColor: 'text-white' },
-  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', icon: Zap, glow: 'shadow-[0_0_30px_rgba(244,117,33,0.4)]', iconColor: 'text-[#F47521]' },
-  { id: 'disney', name: 'DISNEY+', type: 'Premium', icon: Monitor, glow: 'shadow-[0_0_30px_rgba(0,110,153,0.4)]', iconColor: 'text-[#006E99]' },
-  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', icon: Play, glow: 'shadow-[0_0_30px_rgba(0,100,255,0.4)]', iconColor: 'text-[#0064FF]' },
-  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', icon: Gamepad2, glow: 'shadow-[0_0_30px_rgba(16,124,16,0.4)]', iconColor: 'text-[#107C10]' },
-  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', icon: Smartphone, glow: 'shadow-[0_0_30_rgba(255,255,255,0.1)]', iconColor: 'text-gray-400' },
-  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', icon: Shield, glow: 'shadow-[0_0_30px_rgba(255,28,28,0.4)]', iconColor: 'text-[#FF1C1C]' },
+  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'shadow-[0_0_40px_rgba(229,9,20,0.3)]' },
+  { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'shadow-[0_0_40px_rgba(255,255,255,0.1)]' },
+  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'shadow-[0_0_40px_rgba(244,117,33,0.3)]' },
+  { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'shadow-[0_0_40px_rgba(0,110,153,0.3)]' },
+  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'shadow-[0_0_40px_rgba(0,100,255,0.3)]' },
+  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'shadow-[0_0_40px_rgba(16,124,16,0.3)]' },
+  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'shadow-[0_0_40px_rgba(255,255,255,0.1)]' },
+  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'shadow-[0_0_40px_rgba(255,28,28,0.3)]' },
 ];
 
 const PRICES = {
-  standard: { '1 MONTH': 1.99, '3 MONTHS': 3.99, '1 YEAR': 6.99 },
-  spotify_family: { '1 MONTH': 2.99, '3 MONTHS': 4.99, '1 YEAR': 8.99 }
+  standard: { '1 MONTH': 2.99, '3 MONTHS': 8.99, '1 YEAR': 29.99 },
+  spotify_family: { '1 MONTH': 2.99, '3 MONTHS': 8.99, '1 YEAR': 29.99 }
 };
 
 const Accounts = () => {
@@ -74,11 +85,10 @@ const Accounts = () => {
               animate={{ opacity: 1, y: 0 }}
               className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col"
             >
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-black border border-green-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-                  <Music className="w-8 h-8 text-[#1DB954]" />
+              <div className="flex flex-col items-center mb-8">
+                <div className="w-full h-20 flex items-center justify-center mb-4">
+                  <img src={spotifyLogo} alt="Spotify" className="h-full object-contain drop-shadow-[0_0_15px_rgba(30,215,96,0.4)]" />
                 </div>
-                <h3 className="text-4xl font-black text-[#1DB954] uppercase italic tracking-tighter">Spotify</h3>
               </div>
 
               <div className="space-y-8 flex-grow">
@@ -120,14 +130,14 @@ const Accounts = () => {
                 transition={{ delay: index * 0.05 }}
                 className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center text-center group"
               >
-                <div className={cn("w-20 h-20 rounded-full bg-black flex items-center justify-center mb-6 transition-all duration-500", service.glow)}>
-                  <service.icon className={cn("w-10 h-10", service.iconColor)} />
+                <div className={cn("w-full h-24 flex items-center justify-center mb-6 transition-all duration-500", service.glow)}>
+                  <img src={service.image} alt={service.name} className="h-full object-contain" />
                 </div>
                 
-                <h3 className={cn("text-3xl font-black uppercase italic tracking-tighter mb-1", service.iconColor)}>
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1">
                   {service.name}
                 </h3>
-                <p className="text-[10px] font-black text-white uppercase italic tracking-widest mb-8">{service.name}</p>
+                <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest mb-8">{service.name}</p>
 
                 <div className="w-full mt-auto">
                   <div className="flex gap-2 mb-4">
