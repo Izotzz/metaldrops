@@ -21,14 +21,14 @@ import minecraftLogo from '@/assets/minecraft_logo.png';
 import expressvpnLogo from '@/assets/expressvpn_logo.png';
 
 const SERVICES = [
-  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'shadow-[0_0_40px_rgba(229,9,20,0.3)]' },
-  { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'shadow-[0_0_40px_rgba(255,255,255,0.1)]' },
-  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'shadow-[0_0_40px_rgba(244,117,33,0.3)]' },
-  { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'shadow-[0_0_40px_rgba(0,110,153,0.3)]' },
-  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'shadow-[0_0_40px_rgba(0,100,255,0.3)]' },
-  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'shadow-[0_0_40px_rgba(16,124,16,0.3)]' },
-  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'shadow-[0_0_40px_rgba(255,255,255,0.1)]' },
-  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'shadow-[0_0_40px_rgba(255,28,28,0.3)]' },
+  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'shadow-[0_0_50px_rgba(229,9,20,0.4)]' },
+  { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'shadow-[0_0_50px_rgba(255,255,255,0.15)]' },
+  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'shadow-[0_0_50px_rgba(244,117,33,0.4)]' },
+  { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'shadow-[0_0_50px_rgba(0,110,153,0.4)]' },
+  { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'shadow-[0_0_50px_rgba(0,100,255,0.4)]' },
+  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'shadow-[0_0_50px_rgba(16,124,16,0.4)]' },
+  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'shadow-[0_0_50px_rgba(255,255,255,0.1)]' },
+  { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'shadow-[0_0_50px_rgba(255,28,28,0.4)]' },
 ];
 
 const PRICES = {
@@ -86,8 +86,12 @@ const Accounts = () => {
               className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col"
             >
               <div className="flex flex-col items-center mb-8">
-                <div className="w-full h-20 flex items-center justify-center mb-4">
-                  <img src={spotifyLogo} alt="Spotify" className="h-full object-contain drop-shadow-[0_0_15px_rgba(30,215,96,0.4)]" />
+                <div className="w-full h-24 flex items-center justify-center mb-4">
+                  <img 
+                    src={spotifyLogo} 
+                    alt="Spotify" 
+                    className="h-full object-contain mix-blend-screen drop-shadow-[0_0_20px_rgba(30,215,96,0.5)]" 
+                  />
                 </div>
               </div>
 
@@ -130,8 +134,12 @@ const Accounts = () => {
                 transition={{ delay: index * 0.05 }}
                 className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center text-center group"
               >
-                <div className={cn("w-full h-24 flex items-center justify-center mb-6 transition-all duration-500", service.glow)}>
-                  <img src={service.image} alt={service.name} className="h-full object-contain" />
+                <div className={cn("w-full h-28 flex items-center justify-center mb-6 transition-all duration-500", service.glow)}>
+                  <img 
+                    src={service.image} 
+                    alt={service.name} 
+                    className="h-full object-contain mix-blend-screen" 
+                  />
                 </div>
                 
                 <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1">
