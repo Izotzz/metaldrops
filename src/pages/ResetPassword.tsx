@@ -23,7 +23,7 @@ const ResetPassword = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError("Este enlace ha caducado o ya ha sido utilizado por seguridad. Por favor, solicita uno nuevo.");
+        setError("This link has expired or has already been used for security reasons. Please request a new one.");
         setStatus('error');
       }
     };
@@ -48,13 +48,11 @@ const ResetPassword = () => {
     try {
       const result = await resetPassword(newPassword);
       if (result.success) {
-        // MEDIDA DE SEGURIDAD: Cerrar sesión inmediatamente para invalidar el token de recuperación
         await supabase.auth.signOut();
         
         setStatus('success');
-        showSuccess("Contraseña actualizada. Por seguridad, el enlace ha sido invalidado.");
+        showSuccess("Password updated. For security, the link has been invalidated.");
         
-        // Redirección forzada al login tras un breve delay para que el usuario vea el éxito
         setTimeout(() => navigate('/login'), 3000);
       } else {
         setError(result.message);
@@ -99,7 +97,7 @@ const ResetPassword = () => {
                 <div className="space-y-2">
                   <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Success!</h3>
                   <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                    Contraseña actualizada. Por seguridad, el enlace ha sido invalidado. Inicia sesión con tu nueva clave.
+                    Password updated. For security, the link has been invalidated. Please sign in with your new credentials.
                   </p>
                 </div>
                 <Button 
@@ -109,7 +107,7 @@ const ResetPassword = () => {
                   Go to Login Now
                 </Button>
               </motion.div>
-            ) : status === 'error' && error?.includes("caducado") ? (
+            ) : status === 'error' && error?.includes("expired") ? (
               <motion.div 
                 key="expired"
                 initial={{ opacity: 0 }}
@@ -120,7 +118,7 @@ const ResetPassword = () => {
                   <AlertCircle className="w-10 h-10 text-red-600" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Link Inválido</h3>
+                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Invalid Link</h3>
                   <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
                     {error}
                   </p>
@@ -129,7 +127,7 @@ const ResetPassword = () => {
                   onClick={() => navigate('/forgot-password')}
                   className="w-full bg-red-600 text-white font-black h-14 rounded-2xl uppercase tracking-widest text-xs"
                 >
-                  Solicitar nuevo enlace
+                  Request New Link
                 </Button>
               </motion.div>
             ) : (

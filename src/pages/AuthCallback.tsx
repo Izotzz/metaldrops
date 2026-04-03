@@ -20,8 +20,8 @@ const AuthCallback = () => {
 
         if (error) {
           setStatus('error');
-          setErrorMessage("Este enlace ha caducado o ya ha sido utilizado por seguridad. Por favor, solicita uno nuevo.");
-          showError("Enlace inválido o caducado.");
+          setErrorMessage("This link has expired or has already been used for security reasons. Please request a new one.");
+          showError("Invalid or expired link.");
           setTimeout(() => navigate('/login'), 4000);
           return;
         }
@@ -29,27 +29,25 @@ const AuthCallback = () => {
         if (session) {
           const next = searchParams.get('next') || '/';
           
-          // Si es una confirmación de email (no es reset de password), cerramos sesión para forzar login fresco
           if (!next.includes('reset-password')) {
             await supabase.auth.signOut();
             setStatus('success');
-            showSuccess("Email verificado correctamente. Por favor, inicia sesión.");
+            showSuccess("Email verified successfully. Please sign in.");
             setTimeout(() => navigate('/login'), 2000);
           } else {
-            // Si es reset de password, dejamos la sesión abierta para que ResetPassword.tsx pueda actuar
             setStatus('success');
-            showSuccess("Acceso verificado.");
+            showSuccess("Access verified.");
             setTimeout(() => navigate(next), 1000);
           }
         } else {
           setStatus('error');
-          setErrorMessage("No se ha podido establecer una sesión válida. El enlace puede haber expirado.");
+          setErrorMessage("Could not establish a valid session. The link may have expired.");
           setTimeout(() => navigate('/login'), 4000);
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
         setStatus('error');
-        setErrorMessage("Error crítico de autenticación.");
+        setErrorMessage("Critical authentication error.");
         setTimeout(() => navigate('/login'), 4000);
       }
     };
