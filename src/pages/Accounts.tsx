@@ -21,14 +21,14 @@ import minecraftLogo from '@/assets/minecraft_logo.png';
 import expressvpnLogo from '@/assets/expressvpn_logo.png';
 
 const SERVICES = [
-  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'rgba(229,9,20,0.6)' },
   { id: 'dazn', name: 'DAZN', type: 'Total Access', image: daznLogo, glow: 'rgba(255,255,255,0.2)' },
-  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'rgba(244,117,33,0.6)' },
+  { id: 'netflix', name: 'NETFLIX', type: 'Premium UHD', image: netflixLogo, glow: 'rgba(229,9,20,0.6)' },
+  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'rgba(16,124,16,0.6)' },
   { id: 'disney', name: 'DISNEY+', type: 'Premium', image: disneyLogo, glow: 'rgba(0,110,153,0.6)' },
   { id: 'paramount', name: 'PARAMOUNT+', type: 'Premium', image: paramountLogo, glow: 'rgba(0,100,255,0.6)' },
-  { id: 'xbox', name: 'XBOX GAMEPASS', type: 'Ultimate', image: xboxLogo, glow: 'rgba(16,124,16,0.6)' },
-  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'rgba(255,255,255,0.15)' },
   { id: 'expressvpn', name: 'EXPRESSVPN', type: 'Premium', image: expressvpnLogo, glow: 'rgba(255,28,28,0.6)' },
+  { id: 'minecraft', name: 'MINECRAFT', type: 'Full Access', image: minecraftLogo, glow: 'rgba(255,255,255,0.15)' },
+  { id: 'crunchyroll', name: 'CRUNCHYROLL', type: 'Mega Fan', image: crunchyrollLogo, glow: 'rgba(244,117,33,0.6)' },
 ];
 
 const PRICES = { '1 MONTH': 2.99, '3 MONTHS': 8.99, '1 YEAR': 29.99 };
