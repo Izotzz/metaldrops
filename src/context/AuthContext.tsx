@@ -219,27 +219,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     try {
-      // Verificar si el email existe en la tabla profiles antes de enviar
-      const { data: existingUser, error: checkError } = await supabase
+      // 1. Verificar si el email existe en la tabla profiles
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
-      if (checkError || !existingUser) {
+      if (profileError) {
+        console.error("[Auth] Profile check error:", profileError);
+        return { success: false, message: "An error occurred while verifying the email." };
+      }
+
+      if (!profile) {
         return { success: false, message: "Email not registered" };
       }
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // 2. Intentar enviar el correo de recuperación
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://metaldrops.store/auth/callback?next=/reset-password',
       });
       
-      if (error) {
-        return { success: false, message: error.message };
+      if (resetError) {
+        // Manejo específico de Rate Limit (429)
+        if (resetError.status === 429 || resetError.message.toLowerCase().includes('too many requests')) {
+          return { success: false, message: "Too many requests. Please try again later." };
+        }
+        return { success: false, message: resetError.message };
       }
+
       return { success: true, message: "Reset link sent" };
     } catch (error: any) {
-      return { success: false, message: error.message };
+      return { success: false, message: error.message || "An unexpected error occurred." };
     }
   };
 
