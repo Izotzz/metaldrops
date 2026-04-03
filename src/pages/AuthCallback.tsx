@@ -11,6 +11,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -19,29 +20,37 @@ const AuthCallback = () => {
 
         if (error) {
           setStatus('error');
-          showError("Security Alert: The link has expired or is invalid.");
-          setTimeout(() => navigate('/login'), 3000);
+          setErrorMessage("Este enlace ha caducado o ya ha sido utilizado por seguridad. Por favor, solicita uno nuevo.");
+          showError("Enlace inválido o caducado.");
+          setTimeout(() => navigate('/login'), 4000);
           return;
         }
 
         if (session) {
-          setStatus('success');
-          showSuccess("Access verified.");
-          
           const next = searchParams.get('next') || '/';
-          setTimeout(() => {
-            navigate(next);
-          }, 1500);
+          
+          // Si es una confirmación de email (no es reset de password), cerramos sesión para forzar login fresco
+          if (!next.includes('reset-password')) {
+            await supabase.auth.signOut();
+            setStatus('success');
+            showSuccess("Email verificado correctamente. Por favor, inicia sesión.");
+            setTimeout(() => navigate('/login'), 2000);
+          } else {
+            // Si es reset de password, dejamos la sesión abierta para que ResetPassword.tsx pueda actuar
+            setStatus('success');
+            showSuccess("Acceso verificado.");
+            setTimeout(() => navigate(next), 1000);
+          }
         } else {
           setStatus('error');
-          showError("Invalid session. Please login again.");
-          setTimeout(() => navigate('/login'), 3000);
+          setErrorMessage("No se ha podido establecer una sesión válida. El enlace puede haber expirado.");
+          setTimeout(() => navigate('/login'), 4000);
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
         setStatus('error');
-        showError("Authentication failed.");
-        setTimeout(() => navigate('/login'), 3000);
+        setErrorMessage("Error crítico de autenticación.");
+        setTimeout(() => navigate('/login'), 4000);
       }
     };
 
@@ -81,7 +90,9 @@ const AuthCallback = () => {
               <XCircle className="h-10 w-10 text-red-600" />
             </div>
             <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Access Denied</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">The link is no longer valid. Redirecting to login...</p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+              {errorMessage}
+            </p>
           </div>
         )}
       </motion.div>

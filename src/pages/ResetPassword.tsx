@@ -23,18 +23,11 @@ const ResetPassword = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.warn("No active recovery session detected");
+        setError("Este enlace ha caducado o ya ha sido utilizado por seguridad. Por favor, solicita uno nuevo.");
+        setStatus('error');
       }
     };
     checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log("Recovery session active - staying on page");
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -55,8 +48,13 @@ const ResetPassword = () => {
     try {
       const result = await resetPassword(newPassword);
       if (result.success) {
+        // MEDIDA DE SEGURIDAD: Cerrar sesión inmediatamente para invalidar el token de recuperación
+        await supabase.auth.signOut();
+        
         setStatus('success');
-        showSuccess("Password updated successfully!");
+        showSuccess("Contraseña actualizada. Por seguridad, el enlace ha sido invalidado.");
+        
+        // Redirección forzada al login tras un breve delay para que el usuario vea el éxito
         setTimeout(() => navigate('/login'), 3000);
       } else {
         setError(result.message);
@@ -100,13 +98,38 @@ const ResetPassword = () => {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Success!</h3>
-                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Your password has been updated. Redirecting to login...</p>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                    Contraseña actualizada. Por seguridad, el enlace ha sido invalidado. Inicia sesión con tu nueva clave.
+                  </p>
                 </div>
                 <Button 
                   onClick={() => navigate('/login')}
                   className="w-full bg-white/5 border border-white/10 text-white font-black h-14 rounded-2xl uppercase tracking-widest text-xs"
                 >
                   Go to Login Now
+                </Button>
+              </motion.div>
+            ) : status === 'error' && error?.includes("caducado") ? (
+              <motion.div 
+                key="expired"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center space-y-8"
+              >
+                <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto border border-red-600/20">
+                  <AlertCircle className="w-10 h-10 text-red-600" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Link Inválido</h3>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                    {error}
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => navigate('/forgot-password')}
+                  className="w-full bg-red-600 text-white font-black h-14 rounded-2xl uppercase tracking-widest text-xs"
+                >
+                  Solicitar nuevo enlace
                 </Button>
               </motion.div>
             ) : (
