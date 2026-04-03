@@ -90,9 +90,8 @@ const Accounts = () => {
               animate={{ opacity: 1, y: 0 }}
               className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border-2 border-red-600/40 shadow-[0_0_30px_rgba(220,38,38,0.1)] flex flex-col"
             >
-              <div className="flex items-center justify-center gap-3 mb-10">
-                <img src={spotifyLogo} alt="Spotify" className="h-10 object-contain mix-blend-screen drop-shadow-[0_0_15px_rgba(30,215,96,0.5)]" />
-                <h3 className="text-4xl font-black text-[#1DB954] uppercase italic tracking-tighter">Spotify</h3>
+              <div className="flex items-center justify-center mb-10">
+                <img src={spotifyLogo} alt="Spotify" className="h-12 object-contain mix-blend-screen drop-shadow-[0_0_15px_rgba(30,215,96,0.5)]" />
               </div>
 
               <div className="space-y-10 flex-grow">
