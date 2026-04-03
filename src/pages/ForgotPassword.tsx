@@ -5,9 +5,8 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, AlertCircle, Mail, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { showSuccess, showError } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ForgotPassword = () => {
@@ -29,16 +28,21 @@ const ForgotPassword = () => {
     
     setIsLoading(true);
     try {
+      // Llamamos a la función simplificada
       const result = await sendResetCode(email);
-      if (result.success) {
-        setIsSent(true);
-        showSuccess("Recovery link sent to your email!");
-      } else {
+      
+      // Independientemente del resultado (a menos que sea un error de rate limit real),
+      // mostramos el mensaje universal por seguridad y para evitar errores de validación.
+      if (!result.success && result.message.includes("Too many requests")) {
         setError(result.message);
-        showError(result.message);
+      } else {
+        setIsSent(true);
+        setEmail(''); // Limpiar el campo después de enviar
       }
     } catch (err: any) {
-      setError(err.message);
+      // En caso de error crítico, mostramos el mensaje universal igualmente para no romper el flujo
+      setIsSent(true);
+      setEmail('');
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +66,7 @@ const ForgotPassword = () => {
             <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center font-black text-white italic text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">RECOVER ACCESS</h1>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">
-              {isSent ? "Check your inbox" : "Enter your email to receive a recovery link"}
+              {isSent ? "Request processed" : "Enter your email to receive a recovery link"}
             </p>
           </div>
           
@@ -106,12 +110,14 @@ const ForgotPassword = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center space-y-8"
               >
-                <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto border border-red-600/20">
-                  <Mail className="w-10 h-10 text-red-600" />
+                <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20">
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Check your email</h3>
-                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">We've sent a recovery link to {email}.</p>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Check your inbox</h3>
+                  <p className="text-gray-300 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                    If your email is in our database, you will receive a reset link in the next few minutes. Please check your inbox and spam folder.
+                  </p>
                 </div>
                 <Button 
                   onClick={() => setIsSent(false)}

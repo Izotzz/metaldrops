@@ -219,23 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     try {
-      // 1. Verificar si el email existe en la tabla profiles
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("[Auth] Profile check error:", profileError);
-        return { success: false, message: "An error occurred while verifying the email." };
-      }
-
-      if (!profile) {
-        return { success: false, message: "Email not registered" };
-      }
-
-      // 2. Intentar enviar el correo de recuperación
+      // Llamada directa a Supabase sin validación previa de perfil
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://metaldrops.store/auth/callback?next=/reset-password',
       });
