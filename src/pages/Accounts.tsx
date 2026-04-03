@@ -97,8 +97,7 @@ const Accounts = () => {
               <div className="space-y-10 flex-grow">
                 {/* Random Account Section */}
                 <div className="text-center">
-                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">RANDOM ACCOUNT</h4>
-                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Random account</p>
+                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-6">RANDOM ACCOUNT</h4>
                   <div className="flex gap-2">
                     <PlanButton serviceName="Spotify" type="Random" duration="1 MONTH" price={2.99} showPrice={false} />
                     <PlanButton serviceName="Spotify" type="Random" duration="3 MONTHS" price={8.99} showPrice={false} />
@@ -113,8 +112,8 @@ const Accounts = () => {
 
                 {/* Family Link Section */}
                 <div className="text-center">
-                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">IN YOUR ACCOUNT <span className="text-gray-500 text-sm">(Family Link)</span></h4>
-                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">In your account</p>
+                  <h4 className="text-lg font-black text-white uppercase italic tracking-tighter mb-1">IN YOUR ACCOUNT</h4>
+                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Family Link</p>
                   <div className="flex gap-2">
                     <PlanButton serviceName="Spotify" type="Family Link" duration="1 MONTH" price={2.99} showPrice={false} />
                     <PlanButton serviceName="Spotify" type="Family Link" duration="3 MONTHS" price={8.99} showPrice={false} />
