@@ -50,6 +50,15 @@
   }
 }
 
+@keyframes vault-pulse {
+  0%, 100% { color: #9ca3af; text-shadow: none; }
+  50% { color: #dc2626; text-shadow: 0 0 15px rgba(220, 38, 38, 0.8); }
+}
+
+.animate-vault-pulse {
+  animation: vault-pulse 2s ease-in-out infinite;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

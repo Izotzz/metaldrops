@@ -17,6 +17,7 @@ const Navbar = () => {
   const { isLoggedIn, isLoading, username, logout } = useAuth();
   const [bannerActive, setBannerActive] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [hasVisitedVault, setHasVisitedVault] = useState(false);
   const { scrollY } = useScroll();
   
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -36,8 +37,18 @@ const Navbar = () => {
 
     checkBanner();
     window.addEventListener('auth-banner-closed', () => setBannerActive(false));
+    
+    // Check if vault has been visited
+    const visited = localStorage.getItem('vault-visited');
+    if (visited) setHasVisitedVault(true);
+    
+    if (location.pathname === '/vault') {
+      localStorage.setItem('vault-visited', 'true');
+      setHasVisitedVault(true);
+    }
+
     return () => window.removeEventListener('auth-banner-closed', () => setBannerActive(false));
-  }, [isLoggedIn, isLoading]);
+  }, [isLoggedIn, isLoading, location.pathname]);
 
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
@@ -94,7 +105,7 @@ const Navbar = () => {
                 location.pathname === item.path 
                   ? "text-red-500" 
                   : "text-gray-400 hover:text-white",
-                item.name === 'Vault' && "text-red-600 font-black"
+                item.name === 'Vault' && !hasVisitedVault && location.pathname !== '/vault' && "animate-vault-pulse font-black"
               )}
             >
               {location.pathname === item.path && (
@@ -197,7 +208,8 @@ const Navbar = () => {
                           "flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all",
                           location.pathname === item.path 
                             ? "bg-red-600/10 text-red-500 border border-red-600/20" 
-                            : "text-gray-400 hover:bg-white/5 hover:text-white"
+                            : "text-gray-400 hover:bg-white/5 hover:text-white",
+                          item.name === 'Vault' && !hasVisitedVault && location.pathname !== '/vault' && "animate-vault-pulse"
                         )}
                       >
                         <item.icon className="h-5 w-5" />
