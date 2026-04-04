@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  const BASE_MEMBERS = 26; // Aumentado a 26
+  const BASE_MEMBERS = 26;
   const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
@@ -103,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         fetchProfile(session.user.id);
         
-        // Si venimos de un login de Discord, guardamos el ID
         if (session.user.app_metadata.provider === 'discord') {
           const dId = session.user.user_metadata.sub;
           if (dId) {
@@ -178,7 +177,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       if (data.user) {
-        // Notificar vía Webhook (Simulado aquí, idealmente vía Edge Function)
         fetch('https://bhhpafsncrcqelpwwqxp.supabase.co/functions/v1/discord-webhook', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -207,7 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: `${window.location.origin}/settings`,
+          redirectTo: `${window.location.origin}/vault-access`,
           skipBrowserRedirect: false
         }
       });

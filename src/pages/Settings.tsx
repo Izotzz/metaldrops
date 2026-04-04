@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
 import { Navigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ const Settings = () => {
   const { isLoggedIn, username, discordId, linkDiscord, isLoading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
     email_notifications: false
@@ -45,6 +46,14 @@ const Settings = () => {
 
   if (authLoading) return null;
   if (!isLoggedIn) return <Navigate to="/login" />;
+
+  const handleLinkDiscord = async () => {
+    setIsRedirecting(true);
+    // Pequeña pausa para que el usuario lea el mensaje
+    setTimeout(async () => {
+      await linkDiscord();
+    }, 1500);
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,7 +160,23 @@ const Settings = () => {
                     Social Connections
                   </div>
 
-                  <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between">
+                  <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between relative overflow-hidden">
+                    <AnimatePresence>
+                      {isRedirecting && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4"
+                        >
+                          <Loader2 className="h-8 w-8 text-red-600 animate-spin mb-3" />
+                          <p className="text-[10px] font-black text-white uppercase tracking-widest">
+                            Redirecting to Vaultcord for server verification...
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 flex items-center justify-center border border-[#5865F2]/20">
                         <MessageSquare className="w-6 h-6 text-[#5865F2]" />
@@ -170,7 +195,8 @@ const Settings = () => {
                       </div>
                     ) : (
                       <Button 
-                        onClick={linkDiscord}
+                        onClick={handleLinkDiscord}
+                        disabled={isRedirecting}
                         className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-black h-10 px-6 rounded-xl uppercase tracking-widest text-[10px]"
                       >
                         Link Discord
