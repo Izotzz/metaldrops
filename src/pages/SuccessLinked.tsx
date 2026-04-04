@@ -1,19 +1,52 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { Check, ShieldCheck, Zap, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/context/AuthContext';
+import { showError } from '@/utils/toast';
 
 const SuccessLinked = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, discordId, isLoading } = useAuth();
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    // Efecto de sonido de sistema (Beep metálico)
-    const playBeep = () => {
+    if (!isLoading) {
+      // 1. Verificación de Sesión
+      if (!isLoggedIn) {
+        showError("Access Denied. Please login first.");
+        navigate('/login');
+        return;
+      }
+
+      // 2. Verificación de Vinculación de Discord
+      if (!discordId) {
+        showError("Access Denied. Please link your Discord first.");
+        navigate('/settings');
+        return;
+      }
+
+      // Si llegamos aquí, el usuario está verificado
+      setIsVerified(true);
+      playBeep();
+
+      // Auto-redirección tras 5 segundos
+      const timer = setTimeout(() => {
+        navigate('/vault');
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, discordId, isLoading, navigate]);
+
+  // Efecto de sonido de sistema (Beep metálico)
+  const playBeep = () => {
+    try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
@@ -30,17 +63,19 @@ const SuccessLinked = () => {
 
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + 0.5);
-    };
+    } catch (e) {
+      console.warn("Audio context failed to start");
+    }
+  };
 
-    playBeep();
-
-    // Auto-redirección tras 5 segundos
-    const timer = setTimeout(() => {
-      navigate('/store');
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [navigate]);
+  // Mientras carga o verifica, no mostramos nada del contenido sensible
+  if (isLoading || !isVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-black selection:bg-red-600 selection:text-white overflow-hidden">
@@ -98,7 +133,7 @@ const SuccessLinked = () => {
 
               <div className="flex items-center gap-3 text-[9px] font-black text-gray-600 uppercase tracking-widest">
                 <div className="w-12 h-px bg-white/5"></div>
-                Auto-redirecting to store in 5s
+                Auto-redirecting to vault in 5s
                 <div className="w-12 h-px bg-white/5"></div>
               </div>
             </div>
