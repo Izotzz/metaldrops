@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User, LogOut, Menu, LogIn, Loader2, X, Home, ShoppingBag, Gift, FileText, Gamepad2, Library, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { cn } from "@/utils/utils";
+import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
