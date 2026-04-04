@@ -74,28 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   };
 
-  const syncDiscordId = async (currentUser: SupabaseUser) => {
-    // Buscar identidad de Discord en el objeto de usuario
-    const discordIdentity = currentUser.identities?.find(id => id.provider === 'discord');
-    if (discordIdentity) {
-      const dId = discordIdentity.id;
-      if (dId) {
-        const { error } = await supabase.from('profiles').update({ discord_id: dId }).eq('id', currentUser.id);
-        if (!error) setDiscordId(dId);
-        return dId;
-      }
-    }
-    return null;
-  };
-
   useEffect(() => {
     let mounted = true;
-
-    const safetyTimeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        setIsLoading(false);
-      }
-    }, 5000);
 
     const initializeAuth = async () => {
       if (isInitialized.current) return;
@@ -103,22 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            await fetchProfile(session.user.id);
-            await syncDiscordId(session.user);
-          }
-          await fetchUserCount();
+        if (mounted && session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
         }
+        await fetchUserCount();
       } catch (error) {
         console.error("[Auth] Initialization failed:", error);
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
-        }
+        if (mounted) setIsLoading(false);
       }
     };
 
@@ -129,10 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        // Si el evento es USER_UPDATED o INITIAL_SESSION, sincronizamos identidades
-        if (event === 'USER_UPDATED' || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           await fetchProfile(session.user.id);
-          await syncDiscordId(session.user);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -146,16 +117,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
-    // Listener para mensajes de la popup de vinculación
     const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      if (event.data === 'discord-linked-success') {
-        const { data: { user: updatedUser } } = await supabase.auth.getUser();
-        if (updatedUser) {
-          setUser(updatedUser);
-          await fetchProfile(updatedUser.id);
-          await syncDiscordId(updatedUser);
-        }
+      if (event.data === 'discord-linked-success' && user) {
+        await fetchProfile(user.id);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -163,26 +128,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
       window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      
       if (data.user) {
         setUser(data.user);
         await fetchProfile(data.user.id);
-        const displayName = data.user.user_metadata?.display_name || data.user.user_metadata?.username || 'User';
-        return { success: true, message: displayName };
+        return { success: true, message: data.user.user_metadata?.display_name || 'User' };
       }
       return { success: false, message: "Login failed" };
     } catch (error: any) {
@@ -195,16 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
     setIsLoading(true);
     try {
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .or(`email.eq.${email},username.eq.${regUsername}`)
-        .maybeSingle();
-
-      if (existingUser) {
-        return { success: false, message: "User already exists with this email or username." };
-      }
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -213,26 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
-
       if (error) throw error;
-      
-      if (data.user) {
-        fetch('https://bhhpafsncrcqelpwwqxp.supabase.co/functions/v1/discord-webhook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            content: `🔥 New User Joined the Metal Vault! Total Users: ${userCount + 1}` 
-          })
-        }).catch(() => {});
-
-        if (!data.session) {
-          return { success: true, message: "Please check your email to confirm your account." };
-        }
-        setUser(data.user);
-        await fetchProfile(data.user.id);
-        return { success: true, message: "Registration successful" };
+      if (data.user && !data.session) {
+        return { success: true, message: "Please check your email to confirm your account." };
       }
-      return { success: false, message: "Registration failed" };
+      return { success: true, message: "Registration successful" };
     } catch (error: any) {
       return { success: false, message: error.message };
     } finally {
@@ -241,17 +174,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const linkDiscord = async () => {
+    if (!user) return null;
     try {
-      const { data, error } = await supabase.auth.linkIdentity({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?flow=link`,
+          redirectTo: `${window.location.origin}/auth/discord-callback?original_id=${user.id}`,
+          skipBrowserRedirect: true
         }
       });
-      
       if (error) throw error;
       return data?.url || null;
     } catch (error: any) {
+      console.error("[Auth] linkDiscord Error:", error);
       showError(error.message || "Failed to initiate Discord link.");
       return null;
     }
@@ -264,71 +199,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    try {
-      setIsLoading(true);
-      await supabase.auth.signOut();
-      setUser(null);
-      setUsername(null);
-      setRole(null);
-      setDiscordId(null);
-      setBoughtProductIds([]);
-      setLastClaimedAt(null);
-    } catch (error) {
-      console.error("[Auth] Logout error:", error);
-    } finally {
-      window.location.href = '/';
-    }
+    await supabase.auth.signOut();
+    window.location.href = '/';
   };
 
   const addBoughtProducts = async (ids: number[]) => {
     if (!user) return;
     const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
-    try {
-      const { error } = await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
-      if (!error) setBoughtProductIds(newIds);
-    } catch (e) {
-      console.error("[Auth] Update error:", e);
-    }
+    await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
+    setBoughtProductIds(newIds);
   };
 
   const claimDailyAccount = async () => {
     if (!user) return;
     const now = new Date().toISOString();
-    try {
-      const { error } = await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
-      if (!error) setLastClaimedAt(new Date(now).getTime());
-    } catch (e) {
-      console.error("[Auth] Claim error:", e);
-    }
+    await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
+    setLastClaimedAt(new Date(now).getTime());
   };
 
   const sendResetCode = async (email: string) => {
-    try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-      });
-      
-      if (resetError) {
-        if (resetError.status === 429 || resetError.message.toLowerCase().includes('too many requests')) {
-          return { success: false, message: "Too many requests. Please try again later." };
-        }
-        return { success: false, message: resetError.message };
-      }
-
-      return { success: true, message: "Reset link sent" };
-    } catch (error: any) {
-      return { success: false, message: error.message || "An unexpected error occurred." };
-    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: "Reset link sent" };
   };
 
   const resetPassword = async (password: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      return { success: true, message: "Password updated" };
-    } catch (error: any) {
-      return { success: false, message: error.message };
-    }
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: "Password updated" };
   };
 
   return (

@@ -21,6 +21,7 @@ import MyProducts from "./pages/MyProducts";
 import Checkout from "./pages/Checkout";
 import Settings from "./pages/Settings";
 import AuthCallback from "./pages/AuthCallback";
+import DiscordCallback from "./pages/DiscordCallback";
 import VaultAccess from "./pages/VaultAccess";
 import SuccessLinked from "./pages/SuccessLinked";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/discord-callback" element={<DiscordCallback />} />
               <Route path="/vault-access" element={<VaultAccess />} />
               <Route path="/success-linked" element={<SuccessLinked />} />
               <Route path="*" element={<NotFound />} />
