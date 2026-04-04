@@ -17,7 +17,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
-  linkDiscord: () => Promise<void>;
+  linkDiscord: () => Promise<string | null>;
   checkDiscordStatus: () => Promise<boolean>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;
@@ -80,8 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (discordIdentity) {
       const dId = discordIdentity.id;
       if (dId) {
-        await supabase.from('profiles').update({ discord_id: dId }).eq('id', currentUser.id);
-        setDiscordId(dId);
+        const { error } = await supabase.from('profiles').update({ discord_id: dId }).eq('id', currentUser.id);
+        if (!error) setDiscordId(dId);
         return dId;
       }
     }
@@ -129,8 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        await fetchProfile(session.user.id);
-        await syncDiscordId(session.user);
+        // Si el evento es USER_UPDATED o INITIAL_SESSION, sincronizamos identidades
+        if (event === 'USER_UPDATED' || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+          await fetchProfile(session.user.id);
+          await syncDiscordId(session.user);
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
@@ -247,12 +250,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, 'Discord Link', 'width=600,height=800');
-      }
+      return data?.url || null;
     } catch (error: any) {
       showError(error.message || "Failed to initiate Discord link.");
+      return null;
     }
   };
 

@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
@@ -19,6 +19,7 @@ const Settings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showManualCheck, setShowManualCheck] = useState(false);
+  const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
     email_notifications: false
@@ -54,36 +55,49 @@ const Settings = () => {
     };
   }, [isLoggedIn]);
 
-  const startPolling = () => {
+  // Si el discordId cambia (detectado por AuthContext), redirigimos
+  useEffect(() => {
+    if (discordId && isVerifying) {
+      setIsVerifying(false);
+      showSuccess("Discord linked successfully!");
+      navigate('/success-linked');
+    }
+  }, [discordId, isVerifying, navigate]);
+
+  const handleLinkDiscord = async () => {
+    // 1. Abrir ventana inmediatamente para evitar bloqueos
+    const popup = window.open('about:blank', 'Discord Link', 'width=600,height=800');
+    if (!popup) {
+      showError("Popup blocked! Please enable popups for this site.");
+      setShowManualCheck(true);
+      return;
+    }
+
     setIsVerifying(true);
     setShowManualCheck(false);
 
-    pollingInterval.current = setInterval(async () => {
-      const linked = await checkDiscordStatus();
-      if (linked) {
-        if (pollingInterval.current) clearInterval(pollingInterval.current);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        showSuccess("Discord linked successfully!");
-        navigate('/success-linked');
-      }
-    }, 2000);
+    // 2. Obtener la URL de vinculación
+    const url = await linkDiscord();
+    if (url) {
+      setLastUrl(url);
+      popup.location.href = url;
+    } else {
+      popup.close();
+      setIsVerifying(false);
+      showError("Failed to generate link.");
+    }
 
+    // Timeout de seguridad para mostrar el botón de rescate
     timeoutRef.current = setTimeout(() => {
       setShowManualCheck(true);
-    }, 60000);
+    }, 10000);
   };
 
-  const handleLinkDiscord = async () => {
-    await linkDiscord();
-    startPolling();
-  };
-
-  const handleManualCheck = async () => {
-    const linked = await checkDiscordStatus();
-    if (linked) {
-      navigate('/success-linked');
+  const handleManualRetry = () => {
+    if (lastUrl) {
+      window.open(lastUrl, 'Discord Link', 'width=600,height=800');
     } else {
-      showError("Discord ID not found yet. Please complete the process.");
+      handleLinkDiscord();
     }
   };
 
@@ -213,11 +227,11 @@ const Settings = () => {
                           {showManualCheck && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
                               <Button 
-                                onClick={handleManualCheck}
+                                onClick={handleManualRetry}
                                 variant="outline"
                                 className="border-red-600/50 text-red-500 hover:bg-red-600/10 font-black uppercase tracking-widest text-[8px] h-8 px-4 rounded-lg"
                               >
-                                <AlertTriangle className="w-3 h-3 mr-2" /> I have already linked it
+                                <ExternalLink className="w-3 h-3 mr-2" /> Click here if window didn't open
                               </Button>
                             </motion.div>
                           )}
