@@ -31,14 +31,22 @@ const AuthCallback = () => {
 
         if (session) {
           const next = searchParams.get('next') || '/';
-          const isOAuth = session.user.app_metadata.provider === 'discord';
+          const flow = searchParams.get('flow');
+          const isOAuth = session.user.app_metadata.provider === 'discord' || session.user.identities?.some(id => id.provider === 'discord');
           
           setStatus('success');
           
+          // Si es un flujo de vinculación (linkIdentity) y estamos en una popup
+          if (flow === 'link' && window.opener) {
+            window.opener.postMessage('discord-linked-success', window.location.origin);
+            setTimeout(() => window.close(), 1500);
+            return;
+          }
+
           if (isOAuth) {
             showSuccess("Discord identity verified.");
-            // Si es un popup, cerramos la ventana
             if (window.opener) {
+              window.opener.postMessage('discord-linked-success', window.location.origin);
               setTimeout(() => window.close(), 1500);
             } else {
               setTimeout(() => navigate('/success-linked'), 1500);

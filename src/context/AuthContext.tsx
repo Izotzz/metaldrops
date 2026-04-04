@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { showError } from '@/utils/toast';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -73,13 +74,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   };
 
+  const syncDiscordId = async (currentUser: SupabaseUser) => {
+    // Buscar identidad de Discord en el objeto de usuario
+    const discordIdentity = currentUser.identities?.find(id => id.provider === 'discord');
+    if (discordIdentity) {
+      const dId = discordIdentity.id;
+      if (dId) {
+        await supabase.from('profiles').update({ discord_id: dId }).eq('id', currentUser.id);
+        setDiscordId(dId);
+        return dId;
+      }
+    }
+    return null;
+  };
+
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout: Force loading to false after 5 seconds
     const safetyTimeout = setTimeout(() => {
       if (mounted && isLoading) {
-        console.warn("[Auth] Safety timeout reached. Forcing loading to false.");
         setIsLoading(false);
       }
     }, 5000);
@@ -95,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (session?.user) {
             setUser(session.user);
             await fetchProfile(session.user.id);
+            await syncDiscordId(session.user);
           }
           await fetchUserCount();
         }
@@ -115,15 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        const profile = await fetchProfile(session.user.id);
-        
-        if (session.user.app_metadata.provider === 'discord') {
-          const dId = session.user.user_metadata.sub;
-          if (dId && profile && !profile.discord_id) {
-            await supabase.from('profiles').update({ discord_id: dId }).eq('id', session.user.id);
-            setDiscordId(dId);
-          }
-        }
+        await fetchProfile(session.user.id);
+        await syncDiscordId(session.user);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
@@ -136,10 +143,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
+    // Listener para mensajes de la popup de vinculación
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data === 'discord-linked-success') {
+        const { data: { user: updatedUser } } = await supabase.auth.getUser();
+        if (updatedUser) {
+          setUser(updatedUser);
+          await fetchProfile(updatedUser.id);
+          await syncDiscordId(updatedUser);
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
 
@@ -217,21 +239,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const linkDiscord = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.linkIdentity({
         provider: 'discord',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: true
+          redirectTo: `${window.location.origin}/auth/callback?flow=link`,
         }
       });
       
       if (error) throw error;
       
       if (data?.url) {
-        window.open(data.url, '_blank', 'width=600,height=800');
+        window.open(data.url, 'Discord Link', 'width=600,height=800');
       }
-    } catch (error) {
-      console.error("[Auth] Discord link error:", error);
+    } catch (error: any) {
+      showError(error.message || "Failed to initiate Discord link.");
     }
   };
 
