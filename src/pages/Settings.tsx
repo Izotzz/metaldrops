@@ -5,17 +5,15 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Mail, Bell, Camera, Loader2, Save, ShieldCheck, Clock } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
 import { Navigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { isLoggedIn, username, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, username, discordId, linkDiscord, isLoading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -36,7 +34,7 @@ const Settings = () => {
         if (!error && data) {
           setProfileData({
             avatar_url: data.avatar_url || '',
-            email_notifications: false // Forzado a desactivado según instrucciones
+            email_notifications: false
           });
         }
       }
@@ -60,7 +58,6 @@ const Settings = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/avatar-${Math.random()}.${fileExt}`;
 
-      // Subida al bucket 'avatars'
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
@@ -71,7 +68,6 @@ const Settings = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Actualizar perfil en la tabla
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -82,8 +78,7 @@ const Settings = () => {
       setProfileData(prev => ({ ...prev, avatar_url: publicUrl }));
       showSuccess("Profile image updated!");
     } catch (error: any) {
-      console.error("Upload error:", error);
-      showError(error.message || "Failed to upload image. Make sure the 'avatars' bucket exists.");
+      showError(error.message || "Failed to upload image.");
     } finally {
       setIsUploading(false);
     }
@@ -91,7 +86,6 @@ const Settings = () => {
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
-    // Simulamos guardado pero mantenemos notificaciones desactivadas como se pidió
     setTimeout(() => {
       setIsSaving(false);
       showSuccess("Settings applied successfully!");
@@ -111,7 +105,6 @@ const Settings = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Profile Sidebar */}
             <div className="lg:col-span-1 space-y-8">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -143,13 +136,49 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Settings Form */}
             <div className="lg:col-span-2 space-y-12">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-10 rounded-[3rem] bg-[#050505] border border-white/5 space-y-12"
               >
+                {/* Social Connections Section */}
+                <div className="space-y-8">
+                  <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
+                      <MessageSquare className="w-4 h-4 text-red-600" />
+                    </div>
+                    Social Connections
+                  </div>
+
+                  <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 flex items-center justify-center border border-[#5865F2]/20">
+                        <MessageSquare className="w-6 h-6 text-[#5865F2]" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white uppercase tracking-widest">Discord</h4>
+                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                          {discordId ? "Account Linked" : "Not Connected"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {discordId ? (
+                      <div className="flex items-center gap-2 text-green-500 font-black uppercase tracking-widest text-[10px]">
+                        <CheckCircle2 className="w-4 h-4" /> Verified
+                      </div>
+                    ) : (
+                      <Button 
+                        onClick={linkDiscord}
+                        className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-black h-10 px-6 rounded-xl uppercase tracking-widest text-[10px]"
+                      >
+                        Link Discord
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Notifications Section */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
@@ -160,27 +189,15 @@ const Settings = () => {
                   </div>
 
                   <div className="flex items-start space-x-4 p-6 rounded-2xl bg-white/10 border border-white/10 opacity-60 cursor-not-allowed">
-                    <Checkbox 
-                      id="notifications" 
-                      checked={false}
-                      disabled
-                      className="mt-1 border-white/20"
-                    />
+                    <Checkbox id="notifications" checked={false} disabled className="mt-1 border-white/20" />
                     <div className="grid gap-1.5 leading-none">
                       <div className="flex items-center gap-2">
-                        <label
-                          htmlFor="notifications"
-                          className="text-xs font-black text-white uppercase tracking-widest"
-                        >
-                          Email Notifications
-                        </label>
+                        <label htmlFor="notifications" className="text-xs font-black text-white uppercase tracking-widest">Email Notifications</label>
                         <span className="flex items-center gap-1 text-[8px] bg-red-600/20 text-red-500 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
                           <Clock className="w-2 h-2" /> Coming Soon
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                        This feature is currently under development. You will be notified once it's active.
-                      </p>
+                      <p className="text-[10px] text-gray-500 font-medium leading-relaxed">This feature is currently under development.</p>
                     </div>
                   </div>
                 </div>

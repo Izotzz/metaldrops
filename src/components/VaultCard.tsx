@@ -2,21 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Unlock, Skull, Terminal, Loader2 } from 'lucide-react';
+import { Lock, Unlock, Skull, Terminal, Loader2, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { VaultMethod } from '@/data/vault';
+import { useAuth } from '@/context/AuthContext';
+import { Link } from 'react-router-dom';
 
 interface VaultCardProps extends VaultMethod {
   isLoggedIn: boolean;
 }
 
 const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }: VaultCardProps) => {
+  const { discordId } = useAuth();
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [obfuscatedText, setObfuscatedText] = useState('');
 
-  // Generar texto tipo Matrix
+  const isElite = difficulty >= 3;
+  const needsDiscord = isElite && !discordId;
+
   useEffect(() => {
     if (!isUnlocked) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
@@ -32,7 +37,7 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
   }, [isUnlocked]);
 
   const handleUnlock = () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || needsDiscord) return;
     setIsDecrypting(true);
     setTimeout(() => {
       setIsDecrypting(false);
@@ -47,20 +52,18 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
       viewport={{ once: true }}
       className="relative group bg-black border border-red-600/20 rounded-2xl p-6 font-mono overflow-hidden hover:border-red-600/50 transition-all duration-500 shadow-[0_0_20px_rgba(220,38,38,0.05)]"
     >
-      {/* Terminal Header */}
       <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-red-600" />
           <span className="text-[10px] text-gray-500 uppercase tracking-tighter">SECURE_NODE_{category}</span>
         </div>
-        <div className="flex gap-1">
-          <div className="w-2 h-2 rounded-full bg-red-600/20"></div>
-          <div className="w-2 h-2 rounded-full bg-red-600/40"></div>
-          <div className="w-2 h-2 rounded-full bg-red-600"></div>
-        </div>
+        {isElite && (
+          <span className="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse">
+            ELITE
+          </span>
+        )}
       </div>
 
-      {/* Content */}
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <h3 className="text-lg font-black text-white uppercase italic tracking-tighter leading-tight">
@@ -86,7 +89,6 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
           </div>
         </div>
 
-        {/* Data Display Area */}
         <div className="relative bg-white/5 rounded-xl p-4 border border-white/5 min-h-[80px] flex items-center justify-center overflow-hidden">
           <AnimatePresence mode="wait">
             {isUnlocked ? (
@@ -118,28 +120,42 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
           </AnimatePresence>
         </div>
 
-        {/* Action Button */}
         {!isUnlocked && (
-          <Button 
-            onClick={handleUnlock}
-            disabled={isDecrypting}
-            className={cn(
-              "w-full h-12 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-500",
-              isLoggedIn 
-                ? "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]" 
-                : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
+          <div className="space-y-3">
+            {needsDiscord && (
+              <p className="text-[9px] font-black text-red-600 uppercase tracking-widest text-center animate-pulse">
+                ⚠️ LINK YOUR DISCORD TO ACCESS ELITE METHODS
+              </p>
             )}
-          >
-            {isLoggedIn ? (
-              <>DECRYPT DATA <Unlock className="ml-2 w-3 h-3" /></>
+            
+            {needsDiscord ? (
+              <Link to="/settings">
+                <Button className="w-full h-12 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-black uppercase tracking-widest text-[9px]">
+                  LINK DISCORD <MessageSquare className="ml-2 w-3 h-3" />
+                </Button>
+              </Link>
             ) : (
-              <>ACCESS RESTRICTED - LOGIN TO DECRYPT <Lock className="ml-2 w-3 h-3" /></>
+              <Button 
+                onClick={handleUnlock}
+                disabled={isDecrypting}
+                className={cn(
+                  "w-full h-12 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-500",
+                  isLoggedIn 
+                    ? "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]" 
+                    : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
+                )}
+              >
+                {isLoggedIn ? (
+                  <>DECRYPT DATA <Unlock className="ml-2 w-3 h-3" /></>
+                ) : (
+                  <>ACCESS RESTRICTED - LOGIN TO DECRYPT <Lock className="ml-2 w-3 h-3" /></>
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
         )}
       </div>
 
-      {/* Decorative Scanline */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-red-600/5 to-transparent h-1/2 w-full animate-scanline opacity-20"></div>
     </motion.div>
   );

@@ -9,12 +9,14 @@ interface AuthContextType {
   isLoading: boolean;
   username: string | null;
   role: string | null;
+  discordId: string | null;
   userCount: number;
   boughtProductIds: number[];
   lastClaimedAt: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
+  linkDiscord: () => Promise<void>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;
   sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -27,13 +29,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [discordId, setDiscordId] = useState<string | null>(null);
   const [dbCount, setDbCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  const BASE_MEMBERS = 19;
+  const BASE_MEMBERS = 26; // Aumentado a 26
   const userCount = BASE_MEMBERS + dbCount;
 
   const fetchUserCount = async () => {
@@ -51,13 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, role, bought_product_ids, last_claimed_at')
+        .select('username, role, discord_id, bought_product_ids, last_claimed_at')
         .eq('id', userId)
         .maybeSingle();
 
       if (!error && data) {
         setUsername(data.username);
         setRole(data.role || 'user');
+        setDiscordId(data.discord_id);
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
       }
@@ -98,10 +102,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         fetchProfile(session.user.id);
+        
+        // Si venimos de un login de Discord, guardamos el ID
+        if (session.user.app_metadata.provider === 'discord') {
+          const dId = session.user.user_metadata.sub;
+          if (dId) {
+            await supabase.from('profiles').update({ discord_id: dId }).eq('id', session.user.id);
+            setDiscordId(dId);
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUsername(null);
         setRole(null);
+        setDiscordId(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
@@ -157,13 +171,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: { display_name: regUsername },
-          emailRedirectTo: `https://metaldrops.store/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
 
       if (error) throw error;
       
       if (data.user) {
+        // Notificar vía Webhook (Simulado aquí, idealmente vía Edge Function)
+        fetch('https://bhhpafsncrcqelpwwqxp.supabase.co/functions/v1/discord-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            content: `🔥 New User Joined the Metal Vault! Total Users: ${userCount + 1}` 
+          })
+        }).catch(() => {});
+
         if (!data.session) {
           return { success: true, message: "Please check your email to confirm your account." };
         }
@@ -179,6 +202,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const linkDiscord = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${window.location.origin}/settings`,
+          skipBrowserRedirect: false
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("[Auth] Discord link error:", error);
+    }
+  };
+
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -186,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setUsername(null);
       setRole(null);
+      setDiscordId(null);
       setBoughtProductIds([]);
       setLastClaimedAt(null);
     } catch (error) {
@@ -219,13 +258,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendResetCode = async (email: string) => {
     try {
-      // Llamada directa a Supabase sin validación previa de perfil
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://metaldrops.store/auth/callback?next=/reset-password',
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       
       if (resetError) {
-        // Manejo específico de Rate Limit (429)
         if (resetError.status === 429 || resetError.message.toLowerCase().includes('too many requests')) {
           return { success: false, message: "Too many requests. Please try again later." };
         }
@@ -254,12 +291,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       username,
       role,
+      discordId,
       userCount,
       boughtProductIds,
       lastClaimedAt,
       login,
       register,
       logout,
+      linkDiscord,
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,
