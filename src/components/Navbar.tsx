@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn, Loader2, X, Home, ShoppingBag, Gift, FileText, Gamepad2, Library } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn, Loader2, X, Home, ShoppingBag, Gift, FileText, Gamepad2, Library, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { showSuccess } from '@/utils/toast';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
@@ -42,6 +42,7 @@ const Navbar = () => {
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Store', path: '/store', icon: ShoppingBag },
+    { name: 'Vault', path: '/vault', icon: ShieldAlert },
     { name: 'Daily', path: '/daily', icon: Gift },
     { name: 'Pastes', path: '/pastes', icon: FileText },
     { name: 'Free Games', path: '/free-games', icon: Gamepad2 },
@@ -92,7 +93,8 @@ const Navbar = () => {
                 "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative",
                 location.pathname === item.path 
                   ? "text-red-500" 
-                  : "text-gray-400 hover:text-white"
+                  : "text-gray-400 hover:text-white",
+                item.name === 'Vault' && "text-red-600 font-black"
               )}
             >
               {location.pathname === item.path && (
@@ -184,7 +186,6 @@ const Navbar = () => {
                     <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl">M</div>
                     <span className="text-xl font-black tracking-tighter text-white uppercase italic">Metal Drops</span>
                   </div>
-                  {/* Eliminado el botón de cierre manual para evitar el doble X */}
                 </div>
 
                 <div className="flex flex-col gap-2 flex-grow">

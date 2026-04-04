@@ -12,6 +12,7 @@ import Accounts from "./pages/Accounts";
 import DailyAccountPage from "./pages/DailyAccountPage";
 import Pastes from "./pages/Pastes";
 import FreeGames from "./pages/FreeGames";
+import Vault from "./pages/Vault";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/daily" element={<DailyAccountPage />} />
               <Route path="/pastes" element={<Pastes />} />
               <Route path="/free-games" element={<FreeGames />} />
+              <Route path="/vault" element={<Vault />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
