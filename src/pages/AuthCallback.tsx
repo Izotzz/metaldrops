@@ -20,35 +20,54 @@ const AuthCallback = () => {
 
         if (error) {
           setStatus('error');
-          setErrorMessage("This link has expired or has already been used for security reasons. Please request a new one.");
+          setErrorMessage("This link has expired or has already been used for security reasons.");
           showError("Invalid or expired link.");
-          setTimeout(() => navigate('/login'), 4000);
+          setTimeout(() => {
+            if (window.opener) window.close();
+            else navigate('/login');
+          }, 4000);
           return;
         }
 
         if (session) {
           const next = searchParams.get('next') || '/';
+          const isOAuth = session.user.app_metadata.provider === 'discord';
           
-          if (!next.includes('reset-password')) {
-            await supabase.auth.signOut();
-            setStatus('success');
-            showSuccess("Email verified successfully. Please sign in.");
-            setTimeout(() => navigate('/login'), 2000);
-          } else {
-            setStatus('success');
+          setStatus('success');
+          
+          if (isOAuth) {
+            showSuccess("Discord identity verified.");
+            // Si es un popup, cerramos la ventana
+            if (window.opener) {
+              setTimeout(() => window.close(), 1500);
+            } else {
+              setTimeout(() => navigate('/success-linked'), 1500);
+            }
+          } else if (next.includes('reset-password')) {
             showSuccess("Access verified.");
             setTimeout(() => navigate(next), 1000);
+          } else {
+            // Es verificación de email estándar
+            await supabase.auth.signOut();
+            showSuccess("Email verified successfully. Please sign in.");
+            setTimeout(() => navigate('/login'), 2000);
           }
         } else {
           setStatus('error');
-          setErrorMessage("Could not establish a valid session. The link may have expired.");
-          setTimeout(() => navigate('/login'), 4000);
+          setErrorMessage("Could not establish a valid session.");
+          setTimeout(() => {
+            if (window.opener) window.close();
+            else navigate('/login');
+          }, 4000);
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
         setStatus('error');
         setErrorMessage("Critical authentication error.");
-        setTimeout(() => navigate('/login'), 4000);
+        setTimeout(() => {
+          if (window.opener) window.close();
+          else navigate('/login');
+        }, 4000);
       }
     };
 
@@ -78,7 +97,9 @@ const AuthCallback = () => {
               <CheckCircle2 className="h-10 w-10 text-green-500" />
             </div>
             <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Verification Successful</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Redirecting...</p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+              {window.opener ? "Closing window..." : "Redirecting..."}
+            </p>
           </div>
         )}
 

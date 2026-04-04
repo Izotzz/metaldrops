@@ -58,7 +58,6 @@ const Settings = () => {
     setIsVerifying(true);
     setShowManualCheck(false);
 
-    // Polling cada 2 segundos
     pollingInterval.current = setInterval(async () => {
       const linked = await checkDiscordStatus();
       if (linked) {
@@ -69,7 +68,6 @@ const Settings = () => {
       }
     }, 2000);
 
-    // Timeout de 60 segundos para mostrar el botón manual
     timeoutRef.current = setTimeout(() => {
       setShowManualCheck(true);
     }, 60000);
@@ -234,14 +232,14 @@ const Settings = () => {
                       <div>
                         <h4 className="text-sm font-black text-white uppercase tracking-widest">Discord</h4>
                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                          {discordId ? "Account Linked" : "Not Connected"}
+                          {discordId ? "Linked with Discord" : "Not Connected"}
                         </p>
                       </div>
                     </div>
                     
                     {discordId ? (
-                      <div className="flex items-center gap-2 text-green-500 font-black uppercase tracking-widest text-[10px]">
-                        <CheckCircle2 className="w-4 h-4" /> Verified
+                      <div className="flex items-center gap-2 text-green-500 font-black uppercase tracking-widest text-[10px] bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20">
+                        <CheckCircle2 className="w-4 h-4" /> Linked
                       </div>
                     ) : (
                       <Button 
