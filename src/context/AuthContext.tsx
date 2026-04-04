@@ -76,6 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
+    // Safety timeout: Force loading to false after 5 seconds
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("[Auth] Safety timeout reached. Forcing loading to false.");
+        setIsLoading(false);
+      }
+    }, 5000);
+
     const initializeAuth = async () => {
       if (isInitialized.current) return;
       isInitialized.current = true;
@@ -86,14 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
-            fetchProfile(session.user.id);
+            await fetchProfile(session.user.id);
           }
-          fetchUserCount();
+          await fetchUserCount();
         }
       } catch (error) {
         console.error("[Auth] Initialization failed:", error);
       } finally {
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+        }
       }
     };
 
@@ -128,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, []);
 

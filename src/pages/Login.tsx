@@ -49,14 +49,6 @@ const Login = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-black">
       <div className="absolute inset-0 bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2"></div>
@@ -77,56 +69,63 @@ const Login = () => {
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-3">Enter your credentials to access</p>
           </div>
           
-          <form className="space-y-8" onSubmit={handleSubmit}>
-            <AnimatePresence mode="wait">
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest"
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <Loader2 className="h-8 w-8 text-red-600 animate-spin" />
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Checking session...</p>
+            </div>
+          ) : (
+            <form className="space-y-8" onSubmit={handleSubmit}>
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="p-4 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-widest"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Email Address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com" 
-                className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Password</Label>
-                <Link to="/forgot-password" title="Reset Password" className="text-[10px] text-red-600 font-black uppercase tracking-widest hover:underline">Forgot?</Link>
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Email Address</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com" 
+                  className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
+                />
               </div>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" 
-                className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
-            >
-              {isSubmitting ? "SIGNING IN..." : "SIGN IN"} <LogIn className="ml-3 h-4 w-4" />
-            </Button>
-          </form>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Password</Label>
+                  <Link to="/forgot-password" title="Reset Password" className="text-[10px] text-red-600 font-black uppercase tracking-widest hover:underline">Forgot?</Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="bg-black border-white/5 text-white h-14 rounded-2xl focus:ring-red-600 focus:border-red-600/50"
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-14 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
+              >
+                {isSubmitting ? "SIGNING IN..." : "SIGN IN"} <LogIn className="ml-3 h-4 w-4" />
+              </Button>
+            </form>
+          )}
           
           <div className="mt-10 text-center text-[10px] font-black uppercase tracking-widest">
             <span className="text-gray-500">Don't have an account? </span>
