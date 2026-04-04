@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   linkDiscord: () => Promise<void>;
+  checkDiscordStatus: () => Promise<boolean>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;
   sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -64,10 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDiscordId(data.discord_id);
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
+        return data;
       }
     } catch (e) {
       console.error("[Auth] Profile fetch exception:", e);
     }
+    return null;
   };
 
   useEffect(() => {
@@ -101,11 +104,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
-        fetchProfile(session.user.id);
+        const profile = await fetchProfile(session.user.id);
         
         if (session.user.app_metadata.provider === 'discord') {
           const dId = session.user.user_metadata.sub;
-          if (dId) {
+          if (dId && profile && !profile.discord_id) {
             await supabase.from('profiles').update({ discord_id: dId }).eq('id', session.user.id);
             setDiscordId(dId);
           }
@@ -202,17 +205,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const linkDiscord = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: `${window.location.origin}/vault-access`,
-          skipBrowserRedirect: false
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: true
         }
       });
+      
       if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank', 'width=600,height=800');
+      }
     } catch (error) {
       console.error("[Auth] Discord link error:", error);
     }
+  };
+
+  const checkDiscordStatus = async () => {
+    if (!user) return false;
+    const profile = await fetchProfile(user.id);
+    return !!profile?.discord_id;
   };
 
   const logout = async () => {
@@ -297,6 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register,
       logout,
       linkDiscord,
+      checkDiscordStatus,
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,

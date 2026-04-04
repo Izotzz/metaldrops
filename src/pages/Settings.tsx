@@ -1,26 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { isLoggedIn, username, discordId, linkDiscord, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, username, discordId, linkDiscord, checkDiscordStatus, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [showManualCheck, setShowManualCheck] = useState(false);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
     email_notifications: false
   });
+  
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchProfileSettings = async () => {
@@ -42,18 +47,50 @@ const Settings = () => {
     };
 
     if (isLoggedIn) fetchProfileSettings();
+
+    return () => {
+      if (pollingInterval.current) clearInterval(pollingInterval.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [isLoggedIn]);
+
+  const startPolling = () => {
+    setIsVerifying(true);
+    setShowManualCheck(false);
+
+    // Polling cada 2 segundos
+    pollingInterval.current = setInterval(async () => {
+      const linked = await checkDiscordStatus();
+      if (linked) {
+        if (pollingInterval.current) clearInterval(pollingInterval.current);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        showSuccess("Discord linked successfully!");
+        navigate('/success-linked');
+      }
+    }, 2000);
+
+    // Timeout de 60 segundos para mostrar el botón manual
+    timeoutRef.current = setTimeout(() => {
+      setShowManualCheck(true);
+    }, 60000);
+  };
+
+  const handleLinkDiscord = async () => {
+    await linkDiscord();
+    startPolling();
+  };
+
+  const handleManualCheck = async () => {
+    const linked = await checkDiscordStatus();
+    if (linked) {
+      navigate('/success-linked');
+    } else {
+      showError("Discord ID not found yet. Please complete the process.");
+    }
+  };
 
   if (authLoading) return null;
   if (!isLoggedIn) return <Navigate to="/login" />;
-
-  const handleLinkDiscord = async () => {
-    setIsRedirecting(true);
-    // Pequeña pausa para que el usuario lea el mensaje
-    setTimeout(async () => {
-      await linkDiscord();
-    }, 1500);
-  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,17 +199,30 @@ const Settings = () => {
 
                   <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between relative overflow-hidden">
                     <AnimatePresence>
-                      {isRedirecting && (
+                      {isVerifying && !discordId && (
                         <motion.div 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4"
+                          className="absolute inset-0 bg-black/95 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6"
                         >
-                          <Loader2 className="h-8 w-8 text-red-600 animate-spin mb-3" />
-                          <p className="text-[10px] font-black text-white uppercase tracking-widest">
-                            Redirecting to Vaultcord for server verification...
+                          <Loader2 className="h-10 w-10 text-red-600 animate-spin mb-4" />
+                          <h4 className="text-sm font-black text-white uppercase tracking-widest mb-2">Verifying with Discord...</h4>
+                          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest max-w-[200px]">
+                            Please complete the process in the new window.
                           </p>
+                          
+                          {showManualCheck && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+                              <Button 
+                                onClick={handleManualCheck}
+                                variant="outline"
+                                className="border-red-600/50 text-red-500 hover:bg-red-600/10 font-black uppercase tracking-widest text-[8px] h-8 px-4 rounded-lg"
+                              >
+                                <AlertTriangle className="w-3 h-3 mr-2" /> I have already linked it
+                              </Button>
+                            </motion.div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -196,7 +246,6 @@ const Settings = () => {
                     ) : (
                       <Button 
                         onClick={handleLinkDiscord}
-                        disabled={isRedirecting}
                         className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-black h-10 px-6 rounded-xl uppercase tracking-widest text-[10px]"
                       >
                         Link Discord
