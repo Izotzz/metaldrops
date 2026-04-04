@@ -10,15 +10,12 @@ interface AuthContextType {
   isLoading: boolean;
   username: string | null;
   role: string | null;
-  discordId: string | null;
   userCount: number;
   boughtProductIds: number[];
   lastClaimedAt: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
-  linkDiscord: () => Promise<string | null>;
-  checkDiscordStatus: () => Promise<boolean>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;
   sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -31,7 +28,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
-  const [discordId, setDiscordId] = useState<string | null>(null);
   const [dbCount, setDbCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>([]);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(null);
@@ -56,14 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, role, discord_id, bought_product_ids, last_claimed_at')
+        .select('username, role, bought_product_ids, last_claimed_at')
         .eq('id', userId)
         .maybeSingle();
 
       if (!error && data) {
         setUsername(data.username);
         setRole(data.role || 'user');
-        setDiscordId(data.discord_id);
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
         return data;
@@ -109,7 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setUsername(null);
         setRole(null);
-        setDiscordId(null);
         setBoughtProductIds([]);
         setLastClaimedAt(null);
       }
@@ -117,20 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data === 'discord-linked-success' && user) {
-        await fetchProfile(user.id);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      window.removeEventListener('message', handleMessage);
     };
-  }, [user]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -173,31 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const linkDiscord = async () => {
-    if (!user) return null;
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-          redirectTo: `${window.location.origin}/auth/discord-callback?original_id=${user.id}`,
-          skipBrowserRedirect: true
-        }
-      });
-      if (error) throw error;
-      return data?.url || null;
-    } catch (error: any) {
-      console.error("[Auth] linkDiscord Error:", error);
-      showError(error.message || "Failed to initiate Discord link.");
-      return null;
-    }
-  };
-
-  const checkDiscordStatus = async () => {
-    if (!user) return false;
-    const profile = await fetchProfile(user.id);
-    return !!profile?.discord_id;
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/';
@@ -237,15 +197,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       username,
       role,
-      discordId,
       userCount,
       boughtProductIds,
       lastClaimedAt,
       login,
       register,
       logout,
-      linkDiscord,
-      checkDiscordStatus,
       addBoughtProducts,
       claimDailyAccount,
       sendResetCode,

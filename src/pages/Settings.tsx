@@ -1,32 +1,25 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, MessageSquare, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { isLoggedIn, username, discordId, linkDiscord, checkDiscordStatus, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoggedIn, username, isLoading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [showManualCheck, setShowManualCheck] = useState(false);
-  const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
     email_notifications: false
   });
-  
-  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchProfileSettings = async () => {
@@ -48,58 +41,7 @@ const Settings = () => {
     };
 
     if (isLoggedIn) fetchProfileSettings();
-
-    return () => {
-      if (pollingInterval.current) clearInterval(pollingInterval.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
   }, [isLoggedIn]);
-
-  // Si el discordId cambia (detectado por AuthContext), redirigimos
-  useEffect(() => {
-    if (discordId && isVerifying) {
-      setIsVerifying(false);
-      showSuccess("Discord linked successfully!");
-      navigate('/success-linked');
-    }
-  }, [discordId, isVerifying, navigate]);
-
-  const handleLinkDiscord = async () => {
-    // 1. Abrir ventana inmediatamente para evitar bloqueos
-    const popup = window.open('about:blank', 'Discord Link', 'width=600,height=800');
-    if (!popup) {
-      showError("Popup blocked! Please enable popups for this site.");
-      setShowManualCheck(true);
-      return;
-    }
-
-    setIsVerifying(true);
-    setShowManualCheck(false);
-
-    // 2. Obtener la URL de vinculación
-    const url = await linkDiscord();
-    if (url) {
-      setLastUrl(url);
-      popup.location.href = url;
-    } else {
-      popup.close();
-      setIsVerifying(false);
-      showError("Failed to generate link.");
-    }
-
-    // Timeout de seguridad para mostrar el botón de rescate
-    timeoutRef.current = setTimeout(() => {
-      setShowManualCheck(true);
-    }, 10000);
-  };
-
-  const handleManualRetry = () => {
-    if (lastUrl) {
-      window.open(lastUrl, 'Discord Link', 'width=600,height=800');
-    } else {
-      handleLinkDiscord();
-    }
-  };
 
   if (authLoading) return null;
   if (!isLoggedIn) return <Navigate to="/login" />;
@@ -133,6 +75,18 @@ const Settings = () => {
 
       if (updateError) throw updateError;
 
+      setProfileData(prev => ({ ...prev, avatar_url:think
+The user wants me to continue my previous response exactly where it left off.
+
+Looking at the previous response:
+The last file being written was `src/pages/Settings.tsx`.
+The last line was: `setProfileData(prev => ({ ...prev, avatar_url:`
+
+I need to complete the `src/pages/Settings.tsx` file, then write the remaining files: `src/components/VaultCard.tsx`, `src/pages/Vault.tsx`, `src/components/Navbar.tsx`, and `src/App.tsx`.
+
+Let's finish `src/pages/Settings.tsx` first.
+
+```tsx
       setProfileData(prev => ({ ...prev, avatar_url: publicUrl }));
       showSuccess("Profile image updated!");
     } catch (error: any) {
@@ -200,72 +154,128 @@ const Settings = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="p-10 rounded-[3rem] bg-[#050505] border border-white/5 space-y-12"
               >
-                {/* Social Connections Section */}
+                {/* Notifications Section */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
                     <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
-                      <MessageSquare className="w-4 h-4 text-red-600" />
+                      <Bell className="w-4 h-4 text-red-600" />
                     </div>
-                    Social Connections
+                    Notification Preferences
                   </div>
 
-                  <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between relative overflow-hidden">
-                    <AnimatePresence>
-                      {isVerifying && !discordId && (
-                        <motion.div 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-black/95 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6"
-                        >
-                          <Loader2 className="h-10 w-10 text-red-600 animate-spin mb-4" />
-                          <h4 className="text-sm font-black text-white uppercase tracking-widest mb-2">Verifying with Discord...</h4>
-                          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest max-w-[200px]">
-                            Please complete the process in the new window.
-                          </p>
-                          
-                          {showManualCheck && (
-                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
-                              <Button 
-                                onClick={handleManualRetry}
-                                variant="outline"
-                                className="border-red-600/50 text-red-500 hover:bg-red-600/10 font-black uppercase tracking-widest text-[8px] h-8 px-4 rounded-lg"
-                              >
-                                <ExternalLink className="w-3 h-3 mr-2" /> Click here if window didn't open
-                              </Button>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-[#5865F2]/10 flex items-center justify-center border border-[#5865F2]/20">
-                        <MessageSquare className="w-6 h-6 text-[#5865F2]" />
+                  <div className="flex items-start space-x-4 p-6 rounded-2xl bg-white/10 border border-white/10 opacity-60 cursor-not-allowed">
+                    <Checkbox id="notifications" checked={false} disabled className="mt-1 border-white/20" />
+                    <div className="grid gap-1.5 leading-none">
+                      <div className="flex items-center gap-2">
+                        <label htmlFor="notifications" className="text-xs font-black text-white uppercase tracking-widest">Email Notifications</label>
+                        <span className="flex items-center gap-1 text-[8px] bg-red-600/20 text-red-500 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
+                          <Clock className="w-2 h-2" /> Coming Soon
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-black text-white uppercase tracking-widest">Discord</h4>
-                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                          {discordId ? "Linked with Discord" : "Not Connected"}
-                        </p>
-                      </div>
+                      <p className="text-[10px] text-gray-500 font-medium leading-relaxed">This feature is currently under development.</p>
                     </div>
-                    
-                    {discordId ? (
-                      <div className="flex items-center gap-2 text-green-500 font-black uppercase tracking-widest text-[10px] bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20">
-                        <CheckCircle2 className="w-4 h-4" /> Linked
-                      </div>
-                    ) : (
-                      <Button 
-                        onClick={handleLinkDiscord}
-                        className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-black h-10 px-6 rounded-xl uppercase tracking-widest text-[10px]"
-                      >
-                        Link Discord
-                      </Button>
-                    )}
                   </div>
                 </div>
 
+                <Button 
+                  onClick={handleSaveSettings}
+                  disabled={isSaving}
+                  className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-16 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.4)] uppercase tracking-widest text-xs"
+                >
+                  {isSaving ? "SAVING CHANGES..." : "SAVE SETTINGS"} <Save className="ml-3 h-4 w-4" />
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default Settings;
+```
+
+Next, `src/components/VaultCard.tsx`:
+Remove Discord logic.
+
+Next, `src/pages/Vault.tsx`:
+Remove Discord logic.
+
+Next, `src/components/Navbar.tsx`:
+Remove Discord logic.
+
+Next, `src/App.tsx`:
+Remove Discord routes.
+
+I will start by completing the `Settings.tsx` file.publicUrl }));
+      showSuccess("Profile image updated!");
+    } catch (error: any) {
+      showError(error.message || "Failed to upload image.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      showSuccess("Settings applied successfully!");
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-black">
+      <Navbar />
+      <main className="flex-grow pt-48 pb-24">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-16">
+            <h1 className="text-7xl font-black text-white tracking-tighter uppercase italic">
+              Account <span className="text-red-600">Settings</span>
+            </h1>
+            <p className="text-gray-500 font-black mt-3 uppercase tracking-[0.3em] text-[10px]">Manage your profile and preferences</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-1 space-y-8">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-10 rounded-[3rem] bg-[#050505] border border-white/5 text-center relative overflow-hidden group"
+              >
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="w-full h-full rounded-[2.5rem] bg-red-600/10 border border-red-600/20 flex items-center justify-center overflow-hidden">
+                    {profileData.avatar_url ? (
+                      <img src={profileData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-12 h-12 text-red-600" />
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors shadow-lg border-2 border-black">
+                    {isUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isUploading} />
+                  </label>
+                </div>
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{username}</h3>
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-2">Elite Member</p>
+              </motion.div>
+
+              <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/5 flex items-center gap-4">
+                <ShieldCheck className="h-6 w-6 text-red-600" />
+                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-relaxed">
+                  Your account is protected by bank-level encryption.
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-12">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-10 rounded-[3rem] bg-[#050505] border border-white/5 space-y-12"
+              >
                 {/* Notifications Section */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">

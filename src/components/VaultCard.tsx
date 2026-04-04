@@ -2,25 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Unlock, Skull, Terminal, Loader2, MessageSquare } from 'lucide-react';
+import { Lock, Unlock, Skull, Terminal, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { VaultMethod } from '@/data/vault';
-import { useAuth } from '@/context/AuthContext';
-import { Link } from 'react-router-dom';
 
 interface VaultCardProps extends VaultMethod {
   isLoggedIn: boolean;
 }
 
 const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }: VaultCardProps) => {
-  const { discordId } = useAuth();
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [obfuscatedText, setObfuscatedText] = useState('');
-
-  const isElite = difficulty >= 3;
-  const needsDiscord = isElite && !discordId;
 
   useEffect(() => {
     if (!isUnlocked) {
@@ -37,7 +31,7 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
   }, [isUnlocked]);
 
   const handleUnlock = () => {
-    if (!isLoggedIn || needsDiscord) return;
+    if (!isLoggedIn) return;
     setIsDecrypting(true);
     setTimeout(() => {
       setIsDecrypting(false);
@@ -57,11 +51,6 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
           <Terminal className="w-4 h-4 text-red-600" />
           <span className="text-[10px] text-gray-500 uppercase tracking-tighter">SECURE_NODE_{category}</span>
         </div>
-        {isElite && (
-          <span className="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse">
-            ELITE
-          </span>
-        )}
       </div>
 
       <div className="space-y-4">
@@ -121,38 +110,22 @@ const VaultCard = ({ title, content, status, difficulty, category, isLoggedIn }:
         </div>
 
         {!isUnlocked && (
-          <div className="space-y-3">
-            {needsDiscord && (
-              <p className="text-[9px] font-black text-red-600 uppercase tracking-widest text-center animate-pulse">
-                ⚠️ LINK YOUR DISCORD TO ACCESS ELITE METHODS
-              </p>
+          <Button 
+            onClick={handleUnlock}
+            disabled={isDecrypting}
+            className={cn(
+              "w-full h-12 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-500",
+              isLoggedIn 
+                ? "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]" 
+                : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
             )}
-            
-            {needsDiscord ? (
-              <Link to="/settings">
-                <Button className="w-full h-12 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-black uppercase tracking-widest text-[9px]">
-                  LINK DISCORD <MessageSquare className="ml-2 w-3 h-3" />
-                </Button>
-              </Link>
+          >
+            {isLoggedIn ? (
+              <>DECRYPT DATA <Unlock className="ml-2 w-3 h-3" /></>
             ) : (
-              <Button 
-                onClick={handleUnlock}
-                disabled={isDecrypting}
-                className={cn(
-                  "w-full h-12 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-500",
-                  isLoggedIn 
-                    ? "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]" 
-                    : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed"
-                )}
-              >
-                {isLoggedIn ? (
-                  <>DECRYPT DATA <Unlock className="ml-2 w-3 h-3" /></>
-                ) : (
-                  <>ACCESS RESTRICTED - LOGIN TO DECRYPT <Lock className="ml-2 w-3 h-3" /></>
-                )}
-              </Button>
+              <>ACCESS RESTRICTED - LOGIN TO DECRYPT <Lock className="ml-2 w-3 h-3" /></>
             )}
-          </div>
+          </Button>
         )}
       </div>
 
