@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Zap, ShieldAlert, Fingerprint } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Zap, ShieldAlert, Fingerprint, Activity, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
@@ -63,18 +63,18 @@ const Settings = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
+        staggerChildren: 0.1,
         delayChildren: 0.2
       }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
+    hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
     }
   };
 
@@ -82,11 +82,10 @@ const Settings = () => {
     <div className="min-h-screen flex flex-col bg-black relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-red-600/20 to-transparent"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,rgba(220,38,38,0.1),transparent_70%)] pointer-events-none"></div>
-
+      
       <Navbar />
       
-      <main className="flex-grow pt-48 pb-24 relative z-10">
+      <main className="flex-grow pt-48 pb-32 relative z-10">
         <motion.div 
           variants={containerVariants}
           initial="hidden"
@@ -107,7 +106,6 @@ const Settings = () => {
             {/* Profile Card */}
             <motion.div variants={itemVariants} className="lg:col-span-1">
               <div className="relative group p-10 rounded-[3rem] bg-[#050505] border border-white/5 text-center overflow-hidden transition-all duration-500 hover:border-red-600/30">
-                {/* Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-red-600/5 to-transparent h-1/2 w-full animate-scanline opacity-20"></div>
                 
                 <div className="relative z-10">
@@ -124,7 +122,7 @@ const Settings = () => {
                     </button>
                   </div>
                   
-                  <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">{username || 'Collector'}</h3>
+                  <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">{username}</h3>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black text-gray-500 uppercase tracking-widest">
                     <Zap className="w-3 h-3 text-red-600" /> Elite Member
                   </div>
@@ -140,62 +138,73 @@ const Settings = () => {
             {/* Settings Form */}
             <motion.div variants={itemVariants} className="lg:col-span-2">
               <div className="p-10 md:p-12 rounded-[3rem] bg-[#050505] border border-white/5 space-y-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <ShieldCheck size={120} className="text-red-600" />
-                </div>
-
-                <div className="relative z-10 space-y-10">
-                  <div className="space-y-6">
+                <div className="relative z-10 space-y-12">
+                  {/* Notifications Section */}
+                  <div className="space-y-8">
                     <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
                       <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
-                        <ShieldCheck className="w-4 h-4 text-red-600" />
+                        <Bell className="w-4 h-4 text-red-600" />
                       </div>
-                      Security Credentials
+                      Notification Preferences
                     </div>
                     
-                    <div className="grid gap-6">
-                      <div className="p-8 rounded-2xl bg-white/5 border border-white/5 group hover:border-red-600/20 transition-colors">
-                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em] mb-3">Unique Identifier (UID)</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-mono text-white/60 break-all tracking-tighter">{userId || 'Loading...'}</p>
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                    <div className="grid gap-4">
+                      <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:border-red-600/20 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                            <Zap className="w-4 h-4 text-red-600" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-1">New Drops Alerts</h4>
+                            <p className="text-[9px] text-gray-500 font-medium uppercase tracking-wider">Get notified when new tools are added.</p>
+                          </div>
+                        </div>
+                        <div className="w-12 h-6 bg-red-600/20 rounded-full relative border border-red-600/30 cursor-pointer">
+                          <div className="absolute right-1 top-1 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
                         </div>
                       </div>
 
-                      <div className="p-8 rounded-2xl bg-white/5 border border-white/5 group hover:border-red-600/20 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em]">Account Status</p>
-                          <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Verified</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: '100%' }}
-                              transition={{ duration: 1.5, delay: 1 }}
-                              className="h-full bg-red-600"
-                            ></motion.div>
+                      <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:border-red-600/20 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                            <Smartphone className="w-4 h-4 text-red-600" />
                           </div>
-                          <span className="text-[10px] font-black text-white">100%</span>
+                          <div>
+                            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-1">System Status</h4>
+                            <p className="text-[9px] text-gray-500 font-medium uppercase tracking-wider">Critical security and maintenance updates.</p>
+                          </div>
+                        </div>
+                        <div className="w-12 h-6 bg-red-600/20 rounded-full relative border border-red-600/30 cursor-pointer">
+                          <div className="absolute right-1 top-1 w-4 h-4 bg-red-600 rounded-full shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  {/* Security Section */}
+                  <div className="space-y-8">
                     <div className="flex items-center gap-3 text-white font-black uppercase tracking-widest text-xs">
                       <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
-                        <Bell className="w-4 h-4 text-red-600" />
+                        <ShieldCheck className="w-4 h-4 text-red-600" />
                       </div>
-                      Preferences
+                      Account Security
                     </div>
-                    <div className="p-8 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xs font-black text-white uppercase tracking-widest mb-1">Email Notifications</h4>
-                        <p className="text-[10px] text-gray-500 font-medium">Receive updates about new drops and tools.</p>
+                    
+                    <div className="p-8 rounded-2xl bg-white/5 border border-white/5 group hover:border-red-600/20 transition-colors">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em]">Verification Status</p>
+                        <span className="text-[9px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                          Fully Secured
+                        </span>
                       </div>
-                      <div className="w-12 h-6 bg-red-600/20 rounded-full relative border border-red-600/30 cursor-not-allowed">
-                        <div className="absolute right-1 top-1 w-4 h-4 bg-red-600 rounded-full"></div>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: '100%' }}
+                          transition={{ duration: 1.5, delay: 0.5 }}
+                          className="h-full bg-red-600"
+                        ></motion.div>
                       </div>
                     </div>
                   </div>
@@ -226,6 +235,24 @@ const Settings = () => {
           </div>
         </motion.div>
       </main>
+
+      {/* Corner Elements (UID & Status) */}
+      <div className="fixed bottom-8 left-8 z-50 hidden md:flex items-center gap-4 p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5">
+        <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
+          <Activity className="w-4 h-4 text-red-600 animate-pulse" />
+        </div>
+        <div>
+          <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">System Status</p>
+          <p className="text-[10px] font-black text-white uppercase tracking-tighter">Operational_Node_01</p>
+        </div>
+      </div>
+
+      <div className="fixed bottom-8 right-8 z-50 hidden md:flex flex-col items-end gap-1 opacity-40 hover:opacity-100 transition-opacity duration-500">
+        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.4em]">Unique Identifier (UID)</p>
+        <p className="text-[10px] font-mono text-red-600 font-black tracking-tighter bg-red-600/5 px-3 py-1 rounded-lg border border-red-600/10">
+          {userId || 'AUTH_PENDING'}
+        </p>
+      </div>
       
       <Footer />
     </div>
