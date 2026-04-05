@@ -36,17 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const BASE_MEMBERS = 26;
   const userCount = BASE_MEMBERS + dbCount;
 
-  const fetchUserCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      if (!error && count !== null) setDbCount(count);
-    } catch (e) {
-      console.warn("[Auth] User count fetch failed");
-    }
-  };
-
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -60,16 +49,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(data.role || 'user');
         setBoughtProductIds(data.bought_product_ids || []);
         setLastClaimedAt(data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null);
-        return data;
       }
     } catch (e) {
-      console.error("[Auth] Profile fetch exception:", e);
+      console.error("[Auth] Profile fetch error:", e);
     }
-    return null;
   };
 
   useEffect(() => {
     let mounted = true;
+
+    // Timeout de seguridad: Si en 3 segundos no hay respuesta, desbloqueamos la UI
+    const authTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("[Auth] Session fetch timed out. Proceeding as guest.");
+        setIsLoading(false);
+      }
+    }, 3000);
 
     const initializeAuth = async () => {
       if (isInitialized.current) return;
@@ -81,11 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session.user);
           await fetchProfile(session.user.id);
         }
-        await fetchUserCount();
       } catch (error) {
-        console.error("[Auth] Initialization failed:", error);
+        console.error("[Auth] Init error:", error);
       } finally {
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          clearTimeout(authTimeout);
+        }
       }
     };
 
@@ -99,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           await fetchProfile(session.user.id);
         }
-      } else if (event === 'SIGNED_OUT') {
+      } else {
         setUser(null);
         setUsername(null);
         setRole(null);
@@ -113,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearTimeout(authTimeout);
     };
   }, []);
 
@@ -146,10 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       if (error) throw error;
-      if (data.user && !data.session) {
-        return { success: true, message: "Please check your email to confirm your account." };
-      }
-      return { success: true, message: "Registration successful" };
+      return { success: true, message: "Registration successful. Please check your email." };
     } catch (error: any) {
       return { success: false, message: error.message };
     } finally {
