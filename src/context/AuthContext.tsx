@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = 'metal_drops_auth_cache';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Carga optimista desde localStorage
+  // Carga optimista desde localStorage para velocidad instantánea
   const [cachedData, setCachedData] = useState(() => {
     if (typeof window === 'undefined') return null;
     const saved = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [dbCount, setDbCount] = useState(0);
   const [boughtProductIds, setBoughtProductIds] = useState<number[]>(cachedData?.boughtProductIds || []);
   const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(cachedData?.lastClaimedAt || null);
-  const [isLoading, setIsLoading] = useState(!cachedData); // Si hay caché, no bloqueamos
+  const [isLoading, setIsLoading] = useState(!cachedData); 
   const isInitialized = useRef(false);
 
   const BASE_MEMBERS = 26;
@@ -99,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(session.user);
             await fetchProfile(session.user.id);
           } else {
-            // Si no hay sesión real, limpiamos el caché optimista
             clearCache();
             setUsername(null);
             setRole(null);
@@ -217,7 +216,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, message: "Password updated" };
   };
 
-  // Memoización del valor del contexto para evitar re-renders masivos
   const contextValue = useMemo(() => ({
     isLoggedIn: !!(user || cachedData),
     isLoading,

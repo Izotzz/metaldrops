@@ -10,6 +10,7 @@ import { showSuccess } from '@/utils/toast';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import CartSheet from './CartSheet';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const Navbar = () => {
   const { isLoggedIn, isLoading, username, logout } = useAuth();
   const [bannerActive, setBannerActive] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { scrollY } = useScroll();
   
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -27,6 +29,16 @@ const Navbar = () => {
       setHidden(false);
     }
   });
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email === "bymetalyt@gmail.com") {
+        setIsAdmin(true);
+      }
+    };
+    if (isLoggedIn) checkAdmin();
+  }, [isLoggedIn]);
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem('auth-banner-dismissed');
@@ -92,13 +104,15 @@ const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-3">
           <CartSheet />
           
-          {isLoading && !isLoggedIn ? (
+          {isLoggedIn ? (
             <div className="hidden lg:flex items-center gap-3">
-              <div className="w-32 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
-              <div className="w-10 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
-            </div>
-          ) : isLoggedIn ? (
-            <div className="hidden lg:flex items-center gap-3">
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" className="text-red-600 hover:bg-red-600/10 font-black uppercase tracking-widest text-[10px] rounded-xl">
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Link 
                 to="/settings" 
                 className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group"
