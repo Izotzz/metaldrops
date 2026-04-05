@@ -12,7 +12,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { Navigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { isLoggedIn, username, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, userId, username, isLoading: authLoading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     avatar_url: '',
@@ -21,25 +21,33 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
-        setProfileData({
-          avatar_url: data?.avatar_url || '',
-          email: user.email || ''
-        });
+      if (!userId) return;
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+          setProfileData({
+            avatar_url: data?.avatar_url || '',
+            email: user.email || ''
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching profile in settings:", err);
       }
     };
-    if (isLoggedIn) fetchProfile();
-  }, [isLoggedIn]);
+    
+    if (isLoggedIn && userId) fetchProfile();
+  }, [isLoggedIn, userId]);
 
-  if (authLoading) return (
+  // Solo mostramos el spinner si no hay datos cacheados Y estamos cargando
+  if (authLoading && !isLoggedIn) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
     </div>
   );
 
-  if (!isLoggedIn) return <Navigate to="/login" />;
+  if (!isLoggedIn && !authLoading) return <Navigate to="/login" />;
 
   return (
     <div className="min-h-screen flex flex-col bg-black">
@@ -63,8 +71,8 @@ const Settings = () => {
                     <User className="w-12 h-12 text-red-600" />
                   )}
                 </div>
-                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{username}</h3>
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-2">{profileData.email}</p>
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{username || 'Collector'}</h3>
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-2">{profileData.email || 'Syncing...'}</p>
               </div>
             </div>
 
@@ -75,7 +83,7 @@ const Settings = () => {
                 </div>
                 <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
                   <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">User ID</p>
-                  <p className="text-xs font-mono text-white break-all">{(supabase.auth.getUser() as any).id || 'Loading...'}</p>
+                  <p className="text-xs font-mono text-white break-all">{userId || 'Loading...'}</p>
                 </div>
                 <Button 
                   onClick={() => showSuccess("Settings saved")}

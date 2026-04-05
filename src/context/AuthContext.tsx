@@ -7,6 +7,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
+  userId: string | null;
   username: string | null;
   role: string | null;
   userCount: number;
@@ -26,7 +27,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = 'metal_drops_auth_cache';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Carga optimista desde localStorage para velocidad instantánea
   const [cachedData, setCachedData] = useState(() => {
     if (typeof window === 'undefined') return null;
     const saved = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userId, setUserId] = useState<string | null>(cachedData?.userId || null);
   const [username, setUsername] = useState<string | null>(cachedData?.username || null);
   const [role, setRole] = useState<string | null>(cachedData?.role || null);
   const [dbCount, setDbCount] = useState(0);
@@ -55,22 +56,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCachedData(null);
   };
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (uId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('username, role, bought_product_ids, last_claimed_at')
-        .eq('id', userId)
+        .eq('id', uId)
         .maybeSingle();
 
       if (!error && data) {
         const profileInfo = {
+          userId: uId,
           username: data.username,
           role: data.role || 'user',
           boughtProductIds: data.bought_product_ids || [],
           lastClaimedAt: data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null
         };
         
+        setUserId(uId);
         setUsername(profileInfo.username);
         setRole(profileInfo.role);
         setBoughtProductIds(profileInfo.boughtProductIds);
@@ -97,9 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
+            setUserId(session.user.id);
             await fetchProfile(session.user.id);
           } else {
             clearCache();
+            setUserId(null);
             setUsername(null);
             setRole(null);
             setBoughtProductIds([]);
@@ -120,11 +125,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         setUser(session.user);
+        setUserId(session.user.id);
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           await fetchProfile(session.user.id);
         }
       } else {
         setUser(null);
+        setUserId(null);
         setUsername(null);
         setRole(null);
         setBoughtProductIds([]);
@@ -148,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       if (data.user) {
         setUser(data.user);
+        setUserId(data.user.id);
         const profile = await fetchProfile(data.user.id);
         return { success: true, message: profile?.username || 'User' };
       }
@@ -186,18 +194,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addBoughtProducts = async (ids: number[]) => {
-    if (!user) return;
+    if (!userId) return;
     const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
-    await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', user.id);
+    await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', userId);
     setBoughtProductIds(newIds);
     updateCache({ ...cachedData, boughtProductIds: newIds });
   };
 
   const claimDailyAccount = async () => {
-    if (!user) return;
+    if (!userId) return;
     const now = new Date().toISOString();
     const timestamp = new Date(now).getTime();
-    await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', user.id);
+    await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', userId);
     setLastClaimedAt(timestamp);
     updateCache({ ...cachedData, lastClaimedAt: timestamp });
   };
@@ -217,8 +225,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const contextValue = useMemo(() => ({
-    isLoggedIn: !!(user || cachedData),
+    isLoggedIn: !!(userId || cachedData),
     isLoading,
+    userId,
     username,
     role,
     userCount,
@@ -231,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     claimDailyAccount,
     sendResetCode,
     resetPassword
-  }), [user, cachedData, isLoading, username, role, userCount, boughtProductIds, lastClaimedAt]);
+  }), [userId, cachedData, isLoading, username, role, userCount, boughtProductIds, lastClaimedAt]);
 
   return (
     <AuthContext.Provider value={contextValue}>
