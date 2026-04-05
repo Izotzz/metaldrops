@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { showError } from '@/utils/toast';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -14,7 +13,7 @@ interface AuthContextType {
   boughtProductIds: number[];
   lastClaimedAt: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (data: { username: string; email: string; password: string; captchaToken?: string }) => Promise<{ success: boolean; message: string }>;
+  register: (data: { username: string; email: string; password: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   addBoughtProducts: (ids: number[]) => Promise<void>;
   claimDailyAccount: () => Promise<void>;

@@ -18,7 +18,6 @@ const Vault = () => {
       
       <main className="flex-grow pt-40 pb-24">
         <div className="container mx-auto px-4 max-w-6xl">
-          {/* Header Section */}
           <div className="text-center mb-20 relative">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -45,7 +44,6 @@ const Vault = () => {
               Leaked Methods, Private BINs & Zero-Day Exploits
             </motion.p>
 
-            {/* Urgency Banner */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -62,7 +60,6 @@ const Vault = () => {
             </motion.div>
           </div>
 
-          {/* Grid Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {VAULT_DATA.map((method) => (
               <VaultCard 
@@ -73,7 +70,6 @@ const Vault = () => {
             ))}
           </div>
 
-          {/* Bottom CTA for non-logged users */}
           {!isLoggedIn && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
