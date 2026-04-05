@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn, Loader2, Home, ShoppingBag, Gift, FileText, Gamepad2, Library, ShieldAlert } from 'lucide-react';
+import { Bell, User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -92,9 +92,11 @@ const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-3">
           <CartSheet />
           
-          {isLoading ? (
-            <div className="w-10 h-10 flex items-center justify-center">
-              <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
+          {isLoading && !isLoggedIn ? (
+            // Skeleton Loader para evitar saltos de layout
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="w-32 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
+              <div className="w-10 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
             </div>
           ) : isLoggedIn ? (
             <div className="hidden lg:flex items-center gap-3">
