@@ -93,14 +93,16 @@ const Navbar = () => {
           <CartSheet />
           
           {isLoading && !isLoggedIn ? (
-            // Skeleton Loader para evitar saltos de layout
             <div className="hidden lg:flex items-center gap-3">
               <div className="w-32 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
               <div className="w-10 h-10 bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
             </div>
           ) : isLoggedIn ? (
             <div className="hidden lg:flex items-center gap-3">
-              <Link to="/settings" className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group">
+              <Link 
+                to="/settings" 
+                className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group"
+              >
                 <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center">
                   <User className="h-3.5 w-3.5 text-red-500" />
                 </div>

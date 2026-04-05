@@ -6,11 +6,11 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Clock, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 
 const Settings = () => {
   const { isLoggedIn, username, isLoading: authLoading } = useAuth();
@@ -23,27 +23,42 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchProfileSettings = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('avatar_url, email_notifications')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (!error && data) {
-          setProfileData({
-            avatar_url: data.avatar_url || '',
-            email_notifications: false
-          });
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, email_notifications')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (!error && data) {
+            setProfileData({
+              avatar_url: data.avatar_url || '',
+              email_notifications: false
+            });
+          }
         }
+      } catch (err) {
+        console.error("Error fetching settings:", err);
       }
     };
 
     if (isLoggedIn) fetchProfileSettings();
   }, [isLoggedIn]);
 
-  if (authLoading) return null;
+  // Fallback visual para evitar pantalla en negro
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">Synchronizing Profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,6 +101,7 @@ const Settings = () => {
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
+    // Simulación de guardado para feedback instantáneo
     setTimeout(() => {
       setIsSaving(false);
       showSuccess("Settings applied successfully!");
@@ -124,7 +140,7 @@ const Settings = () => {
                     <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isUploading} />
                   </label>
                 </div>
-                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{username}</h3>
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{username || 'Collector'}</h3>
                 <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-2">Elite Member</p>
               </motion.div>
 
