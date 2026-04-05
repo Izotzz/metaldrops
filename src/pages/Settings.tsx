@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { User, Bell, Camera, Loader2, Save, ShieldCheck, Zap, ShieldAlert, Fingerprint, Activity, Smartphone } from 'lucide-react';
+import { User, Bell, Camera, Loader2, Save, ShieldCheck, Zap, ShieldAlert, Fingerprint, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
@@ -235,24 +235,6 @@ const Settings = () => {
           </div>
         </motion.div>
       </main>
-
-      {/* Corner Elements (UID & Status) */}
-      <div className="fixed bottom-8 left-8 z-50 hidden md:flex items-center gap-4 p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/5">
-        <div className="w-8 h-8 rounded-lg bg-red-600/10 flex items-center justify-center border border-red-600/20">
-          <Activity className="w-4 h-4 text-red-600 animate-pulse" />
-        </div>
-        <div>
-          <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">System Status</p>
-          <p className="text-[10px] font-black text-white uppercase tracking-tighter">Operational_Node_01</p>
-        </div>
-      </div>
-
-      <div className="fixed bottom-8 right-8 z-50 hidden md:flex flex-col items-end gap-1 opacity-40 hover:opacity-100 transition-opacity duration-500">
-        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.4em]">Unique Identifier (UID)</p>
-        <p className="text-[10px] font-mono text-red-600 font-black tracking-tighter bg-red-600/5 px-3 py-1 rounded-lg border border-red-600/10">
-          {userId || 'AUTH_PENDING'}
-        </p>
-      </div>
       
       <Footer />
     </div>

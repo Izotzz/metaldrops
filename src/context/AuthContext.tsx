@@ -188,9 +188,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    clearCache();
-    window.location.href = '/';
+    // 1. Limpieza Inmediata (Fuerza Bruta)
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // 2. SignOut No-Blocking
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("[Auth] SignOut error (ignored):", err);
+    }
+    
+    // 3. Redirección Forzosa
+    window.location.href = '/login';
   };
 
   const addBoughtProducts = async (ids: number[]) => {

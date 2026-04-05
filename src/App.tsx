@@ -24,6 +24,7 @@ import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import AuthBanner from "./components/AuthBanner";
+import GlobalUID from "./components/GlobalUID";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AuthBanner />
+            <GlobalUID />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/store" element={<Store />} />
