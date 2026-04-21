@@ -13,6 +13,7 @@ import DailyAccountPage from "./pages/DailyAccountPage";
 import Pastes from "./pages/Pastes";
 import FreeGames from "./pages/FreeGames";
 import Vault from "./pages/Vault";
+import Spin from "./pages/Spin";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/pastes" element={<Pastes />} />
               <Route path="/free-games" element={<FreeGames />} />
               <Route path="/vault" element={<Vault />} />
+              <Route path="/spin" element={<Spin />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />

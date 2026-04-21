@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2, ShieldAlert } from 'lucide-react';
+import { User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2, ShieldAlert, Zap } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ const Navbar = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'Vault', path: '/vault', icon: ShieldAlert },
+    { name: 'Spin', path: '/spin', icon: Zap },
     { name: 'Daily', path: '/daily', icon: Gift },
     { name: 'Pastes', path: '/pastes', icon: FileText },
     { name: 'Free Games', path: '/free-games', icon: Gamepad2 },
