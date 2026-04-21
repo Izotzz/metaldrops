@@ -1,6 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster as Sonner } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
@@ -32,34 +30,31 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthBanner />
-            <GlobalUID />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/store" element={<Store />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/accounts" element={<Accounts />} />
-              <Route path="/daily" element={<DailyAccountPage />} />
-              <Route path="/pastes" element={<Pastes />} />
-              <Route path="/free-games" element={<FreeGames />} />
-              <Route path="/vault" element={<Vault />} />
-              <Route path="/spin" element={<Spin />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/my-products" element={<MyProducts />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Sonner position="top-center" expand={false} richColors />
+        <BrowserRouter>
+          <AuthBanner />
+          <GlobalUID />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/daily" element={<DailyAccountPage />} />
+            <Route path="/pastes" element={<Pastes />} />
+            <Route path="/free-games" element={<FreeGames />} />
+            <Route path="/vault" element={<Vault />} />
+            <Route path="/spin" element={<Spin />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/my-products" element={<MyProducts />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </CartProvider>
     </AuthProvider>
   </QueryClientProvider>
