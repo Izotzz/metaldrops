@@ -50,6 +50,21 @@
   }
 }
 
+@layer utilities {
+  .clip-path-triangle {
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+  }
+  
+  .animate-scanline {
+    animation: scanline 8s linear infinite;
+  }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+
 @keyframes vault-pulse {
   0%, 100% { color: #9ca3af; text-shadow: none; }
   50% { color: #dc2626; text-shadow: 0 0 15px rgba(220, 38, 38, 0.8); }
