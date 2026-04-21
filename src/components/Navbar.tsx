@@ -6,7 +6,7 @@ import { User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2,
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import CartSheet from './CartSheet';
 
@@ -28,6 +28,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem('auth-banner-dismissed');
+    // Solo activar si no está logueado, no ha sido descartado y NO está cargando
     setBannerActive(!isLoggedIn && !dismissed && !isLoading);
     
     const handleBannerClose = () => setBannerActive(false);
@@ -47,20 +48,24 @@ const Navbar = () => {
 
   return (
     <motion.div 
-      variants={{
-        visible: { y: 0, opacity: 1 },
-        hidden: { y: -150, opacity: 0 }
+      initial={false}
+      animate={{ 
+        y: hidden ? -150 : 0,
+        top: bannerActive ? 80 : 16,
+        opacity: hidden ? 0 : 1
       }}
-      animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      style={{ top: bannerActive ? '80px' : '16px' }}
-      className="fixed left-0 right-0 z-50 px-4 transition-[top] duration-500"
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.16, 1, 0.3, 1],
+        top: { duration: 0.5 } 
+      }}
+      className="fixed left-0 right-0 z-50 px-4"
     >
       <nav className="container mx-auto max-w-6xl h-16 flex items-center justify-between px-4 md:px-6 rounded-2xl border border-white/5 bg-black/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black text-white italic text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)]">M</div>
-            <span className="text-xl font-black tracking-tighter text-white uppercase italic">Metal Drops</span>
+            <span className="text-xl font-black tracking-tighter text-white uppercase italic hidden sm:block">Metal Drops</span>
           </Link>
         </div>
 
@@ -85,30 +90,58 @@ const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-3">
           <CartSheet />
           
-          {isLoggedIn ? (
-            <div className="hidden lg:flex items-center gap-3">
-              <Link 
-                to="/settings" 
-                className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group"
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div 
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-10 h-10 flex items-center justify-center"
               >
-                <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center">
-                  <User className="h-3.5 w-3.5 text-red-500" />
-                </div>
-                <span className="text-xs font-black text-gray-300 uppercase tracking-tighter group-hover:text-white">
-                  {username}
-                </span>
-              </Link>
-              <Button variant="ghost" size="icon" onClick={() => logout()} className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl">
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          ) : (
-            <Link to="/login" className="hidden lg:block">
-              <Button className="bg-red-600 hover:bg-red-500 text-white font-black px-6 h-10 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] uppercase tracking-widest text-[10px]">
-                Access <LogIn className="ml-2 h-3.5 w-3.5" />
-              </Button>
-            </Link>
-          )}
+                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              </motion.div>
+            ) : isLoggedIn ? (
+              <motion.div 
+                key="logged-in"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 md:gap-3"
+              >
+                <Link 
+                  to="/settings" 
+                  className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group"
+                >
+                  <div className="w-6 h-6 rounded-full bg-red-600/20 flex items-center justify-center">
+                    <User className="h-3.5 w-3.5 text-red-500" />
+                  </div>
+                  <span className="text-xs font-black text-gray-300 uppercase tracking-tighter group-hover:text-white">
+                    {username}
+                  </span>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => logout()} 
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="logged-out"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <Link to="/login">
+                  <Button className="bg-red-600 hover:bg-red-500 text-white font-black px-6 h-10 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] uppercase tracking-widest text-[10px]">
+                    Access <LogIn className="ml-2 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <Sheet>
             <SheetTrigger asChild>
@@ -118,7 +151,7 @@ const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] bg-black border-white/10 p-0 z-[100]">
               <div className="flex flex-col h-full p-8">
-                <div className="flex flex-col gap-2 flex-grow">
+                <div className="flex flex-col gap-2 flex-grow overflow-y-auto">
                   {navItems.map((item) => (
                     <SheetClose asChild key={item.name}>
                       <Link to={item.path} className={cn("flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all", location.pathname === item.path ? "bg-red-600/10 text-red-500 border border-red-600/20" : "text-gray-400 hover:bg-white/5 hover:text-white")}>
@@ -130,9 +163,16 @@ const Navbar = () => {
                 </div>
                 <div className="mt-auto pt-8 border-t border-white/5">
                   {isLoggedIn ? (
-                    <Button onClick={() => logout()} className="w-full bg-white/5 hover:bg-red-600/10 text-gray-400 hover:text-red-500 border border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-xs">
-                      Logout <LogOut className="ml-3 h-4 w-4" />
-                    </Button>
+                    <div className="space-y-4">
+                      <SheetClose asChild>
+                        <Link to="/settings" className="flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-gray-400 hover:bg-white/5 hover:text-white">
+                          <User className="h-5 w-5" /> Profile
+                        </Link>
+                      </SheetClose>
+                      <Button onClick={() => logout()} className="w-full bg-white/5 hover:bg-red-600/10 text-gray-400 hover:text-red-500 border border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-xs">
+                        Logout <LogOut className="ml-3 h-4 w-4" />
+                      </Button>
+                    </div>
                   ) : (
                     <SheetClose asChild>
                       <Link to="/login" className="block w-full">
