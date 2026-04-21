@@ -1,24 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2, ShieldAlert } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { User, LogOut, Menu, LogIn, Home, ShoppingBag, Gift, FileText, Gamepad2, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { showSuccess } from '@/utils/toast';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import CartSheet from './CartSheet';
-import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isLoggedIn, isLoading, username, logout } = useAuth();
   const [bannerActive, setBannerActive] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { scrollY } = useScroll();
   
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -29,16 +25,6 @@ const Navbar = () => {
       setHidden(false);
     }
   });
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email === "bymetalyt@gmail.com") {
-        setIsAdmin(true);
-      }
-    };
-    if (isLoggedIn) checkAdmin();
-  }, [isLoggedIn]);
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem('auth-banner-dismissed');
@@ -57,12 +43,6 @@ const Navbar = () => {
     { name: 'Pastes', path: '/pastes', icon: FileText },
     { name: 'Free Games', path: '/free-games', icon: Gamepad2 },
   ];
-
-  const handleLogout = async () => {
-    await logout();
-    showSuccess("Logged out successfully");
-    navigate('/');
-  };
 
   return (
     <motion.div 
@@ -106,13 +86,6 @@ const Navbar = () => {
           
           {isLoggedIn ? (
             <div className="hidden lg:flex items-center gap-3">
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="ghost" className="text-red-600 hover:bg-red-600/10 font-black uppercase tracking-widest text-[10px] rounded-xl">
-                    Admin
-                  </Button>
-                </Link>
-              )}
               <Link 
                 to="/settings" 
                 className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-red-600/20 transition-all group"
@@ -124,7 +97,7 @@ const Navbar = () => {
                   {username}
                 </span>
               </Link>
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl">
+              <Button variant="ghost" size="icon" onClick={() => logout()} className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl">
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -156,7 +129,7 @@ const Navbar = () => {
                 </div>
                 <div className="mt-auto pt-8 border-t border-white/5">
                   {isLoggedIn ? (
-                    <Button onClick={handleLogout} className="w-full bg-white/5 hover:bg-red-600/10 text-gray-400 hover:text-red-500 border border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-xs">
+                    <Button onClick={() => logout()} className="w-full bg-white/5 hover:bg-red-600/10 text-gray-400 hover:text-red-500 border border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-xs">
                       Logout <LogOut className="ml-3 h-4 w-4" />
                     </Button>
                   ) : (

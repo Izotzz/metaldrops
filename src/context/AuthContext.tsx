@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -9,215 +9,68 @@ interface AuthContextType {
   isLoading: boolean;
   userId: string | null;
   username: string | null;
-  role: string | null;
-  userCount: number;
-  boughtProductIds: number[];
-  lastClaimedAt: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (data: { username: string; email: string; password: string }) => Promise<{ success: boolean; message: string }>;
-  logout: () => Promise<void>;
-  addBoughtProducts: (ids: number[]) => Promise<void>;
-  claimDailyAccount: () => Promise<void>;
+  logout: () => void;
   sendResetCode: (email: string) => Promise<{ success: boolean; message: string }>;
   resetPassword: (password: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'metal_drops_auth_cache';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cachedData, setCachedData] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  });
-
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [userId, setUserId] = useState<string | null>(cachedData?.userId || null);
-  const [username, setUsername] = useState<string | null>(cachedData?.username || null);
-  const [role, setRole] = useState<string | null>(cachedData?.role || null);
-  const [dbCount, setDbCount] = useState(0);
-  const [boughtProductIds, setBoughtProductIds] = useState<number[]>(cachedData?.boughtProductIds || []);
-  const [lastClaimedAt, setLastClaimedAt] = useState<number | null>(cachedData?.lastClaimedAt || null);
-  const [isLoading, setIsLoading] = useState(!cachedData); 
-  const isInitialized = useRef(false);
-
-  const BASE_MEMBERS = 26;
-  const userCount = BASE_MEMBERS + dbCount;
-
-  const updateCache = (data: any) => {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
-    setCachedData(data);
-  };
-
-  const clearCache = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setCachedData(null);
-  };
-
-  const fetchProfile = async (uId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, role, bought_product_ids, last_claimed_at')
-        .eq('id', uId)
-        .maybeSingle();
-
-      if (!error && data) {
-        const profileInfo = {
-          userId: uId,
-          username: data.username,
-          role: data.role || 'user',
-          boughtProductIds: data.bought_product_ids || [],
-          lastClaimedAt: data.last_claimed_at ? new Date(data.last_claimed_at).getTime() : null
-        };
-        
-        setUserId(uId);
-        setUsername(profileInfo.username);
-        setRole(profileInfo.role);
-        setBoughtProductIds(profileInfo.boughtProductIds);
-        setLastClaimedAt(profileInfo.lastClaimedAt);
-        
-        updateCache(profileInfo);
-        return profileInfo;
-      }
-    } catch (e) {
-      console.error("[Auth] Profile fetch error:", e);
-    }
-    return null;
-  };
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      if (isInitialized.current) return;
-      isInitialized.current = true;
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            setUserId(session.user.id);
-            await fetchProfile(session.user.id);
-          } else {
-            clearCache();
-            setUserId(null);
-            setUsername(null);
-            setRole(null);
-            setBoughtProductIds([]);
-            setLastClaimedAt(null);
-          }
-        }
-      } catch (error) {
-        console.error("[Auth] Init error:", error);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (session?.user) {
-        setUser(session.user);
-        setUserId(session.user.id);
-        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          await fetchProfile(session.user.id);
-        }
-      } else {
-        setUser(null);
-        setUserId(null);
-        setUsername(null);
-        setRole(null);
-        setBoughtProductIds([]);
-        setLastClaimedAt(null);
-        clearCache();
-      }
-      
+    // Comprobación inicial de sesión
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setIsLoading(false);
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    // Escuchar cambios de estado
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (data.user) {
-        setUser(data.user);
-        setUserId(data.user.id);
-        const profile = await fetchProfile(data.user.id);
-        return { success: true, message: profile?.username || 'User' };
-      }
-      return { success: false, message: "Login failed" };
+      return { success: true, message: data.user?.email || 'User' };
     } catch (error: any) {
       return { success: false, message: error.message };
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const register = async ({ username: regUsername, email, password }: { username: string; email: string; password: string }) => {
-    setIsLoading(true);
+  const register = async ({ username, email, password }: { username: string; email: string; password: string }) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { display_name: regUsername },
+          data: { display_name: username },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
       if (error) throw error;
-      return { success: true, message: "Registration successful. Please check your email." };
+      return { success: true, message: "Check your email for verification." };
     } catch (error: any) {
       return { success: false, message: error.message };
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    // 1. Limpieza Inmediata (Fuerza Bruta)
+  const logout = () => {
+    // Fuerza bruta: Limpiar y redirigir al instante
     localStorage.clear();
     sessionStorage.clear();
-    
-    // 2. SignOut No-Blocking
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error("[Auth] SignOut error (ignored):", err);
-    }
-    
-    // 3. Redirección Forzosa
+    supabase.auth.signOut().catch(() => {}); // Intento silencioso
     window.location.href = '/login';
-  };
-
-  const addBoughtProducts = async (ids: number[]) => {
-    if (!userId) return;
-    const newIds = Array.from(new Set([...boughtProductIds, ...ids]));
-    await supabase.from('profiles').update({ bought_product_ids: newIds }).eq('id', userId);
-    setBoughtProductIds(newIds);
-    updateCache({ ...cachedData, boughtProductIds: newIds });
-  };
-
-  const claimDailyAccount = async () => {
-    if (!userId) return;
-    const now = new Date().toISOString();
-    const timestamp = new Date(now).getTime();
-    await supabase.from('profiles').update({ last_claimed_at: now }).eq('id', userId);
-    setLastClaimedAt(timestamp);
-    updateCache({ ...cachedData, lastClaimedAt: timestamp });
   };
 
   const sendResetCode = async (email: string) => {
@@ -235,22 +88,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const contextValue = useMemo(() => ({
-    isLoggedIn: !!(userId || cachedData),
+    isLoggedIn: !!user,
     isLoading,
-    userId,
-    username,
-    role,
-    userCount,
-    boughtProductIds,
-    lastClaimedAt,
+    userId: user?.id || null,
+    username: user?.user_metadata?.display_name || user?.email?.split('@')[0] || null,
     login,
     register,
     logout,
-    addBoughtProducts,
-    claimDailyAccount,
     sendResetCode,
     resetPassword
-  }), [userId, cachedData, isLoading, username, role, userCount, boughtProductIds, lastClaimedAt]);
+  }), [user, isLoading]);
 
   return (
     <AuthContext.Provider value={contextValue}>
