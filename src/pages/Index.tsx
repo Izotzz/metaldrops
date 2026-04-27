@@ -4,7 +4,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
-import { Shield, Zap, Users, Trophy } from 'lucide-react';
+import { Shield, Zap, ShoppingBag, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { TOOLS } from '@/data/tools';
 
@@ -12,10 +12,10 @@ const Index = () => {
   const { userCount } = useAuth();
   
   const STATS = [
-    { label: "Members", value: `${userCount}`, icon: Users },
+    { label: "Orders", value: "85+", icon: ShoppingBag },
     { label: "Tools Available", value: `${TOOLS.length}`, icon: Zap },
     { label: "Success Rate", value: "99.9%", icon: Shield },
-    { label: "Awards Won", value: "12", icon: Trophy },
+    { label: "Discord members", value: "700+", icon: MessageSquare },
   ];
 
   return (
