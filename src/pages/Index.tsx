@@ -4,17 +4,17 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
-import { Shield, ShoppingBag, MessageSquare, LifeBuoy, Users, Trophy } from 'lucide-react';
+import { Shield, ShoppingBag, MessageSquare, LifeBuoy } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const { userCount } = useAuth();
   
   const STATS = [
-    { label: "Members", value: "85+", icon: Users },
+    { label: "Orders", value: "85+", icon: ShoppingBag },
     { label: "Support", value: "24/7", icon: LifeBuoy },
     { label: "Success Rate", value: "99.9%", icon: Shield },
-    { label: "Awards Won", value: "700+", icon: Trophy },
+    { label: "Discord Members", value: "700+", icon: MessageSquare },
   ];
 
   return (
