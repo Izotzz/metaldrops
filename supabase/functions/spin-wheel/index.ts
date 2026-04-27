@@ -33,7 +33,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''))
     if (userError || !user) throw new Error('Unauthorized')
 
-    // Check eligibility
+    // Verificar elegibilidad
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('last_spin_at, pending_spins, extra_gens_today, bought_product_ids')
@@ -50,7 +50,8 @@ serve(async (req) => {
       throw new Error('You already spun today. Come back later!')
     }
 
-    // Calculate result based on weights
+    // Calcular resultado basado en pesos
+    // Si tiene giros pendientes, eliminamos la opción de ganar más giros (evitar bucles)
     const filteredSegments = (profile.pending_spins || 0) > 0 
       ? SEGMENTS.filter(s => s.type !== 'extra_spins')
       : SEGMENTS;
@@ -61,6 +62,7 @@ serve(async (req) => {
     
     for (let i = 0; i < filteredSegments.length; i++) {
       if (random < filteredSegments[i].weight) {
+        // Encontrar el índice original en SEGMENTS para el frontend
         resultIndex = SEGMENTS.findIndex(s => s.label === filteredSegments[i].label)
         break
       }
@@ -70,7 +72,7 @@ serve(async (req) => {
     const reward = SEGMENTS[resultIndex]
     const rewardData: any = { ...reward }
 
-    // Process reward
+    // Procesar recompensa
     if (reward.type === 'extra_gen') {
       await supabaseClient.from('profiles').update({
         extra_gens_today: (profile.extra_gens_today || 0) + (reward.value as number)
@@ -97,7 +99,7 @@ serve(async (req) => {
       }).eq('id', user.id)
     }
 
-    // Update spin status
+    // Actualizar estado de giro
     const updateData: any = {}
     if ((profile.pending_spins || 0) > 0) {
       updateData.pending_spins = profile.pending_spins - 1
