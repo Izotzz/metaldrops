@@ -72,7 +72,7 @@ const Hero = () => {
               </Button>
             </Link>
             
-            <a href="https://discord.gg/mNVCXqJADW" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            <a href="https://discord.gg/metaldrops" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-2xl px-10 h-16 sm:h-14 uppercase tracking-widest text-xs font-black">
                 <MessageSquare className="mr-3 h-4 w-4" /> Discord
               </Button>

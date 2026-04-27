@@ -39,7 +39,7 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-black mb-6 uppercase tracking-[0.3em] text-[10px]">Support</h4>
             <ul className="space-y-4">
-              <li><a href="https://discord.gg/mNVCXqJADW" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Discord Server</a></li>
+              <li><a href="https://discord.gg/metaldrops" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">Discord Server</a></li>
             </ul>
           </div>
 
